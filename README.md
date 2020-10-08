@@ -4,6 +4,7 @@ CS 3110 final project for ai93, nca28, bas339
 Early project ideas: 
 * A synthesizer that you can play with your keyboard
 * Audio frequency spectrum analyzer
+* Create music from text files OR in a command-line tool (something like Vim)
 * Implement the Perceptron in OCaml
 * Painting software, think Tux Paint
 * Malware (potentially fun to make, but morally reprehensible)
