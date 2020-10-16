@@ -1,6 +1,6 @@
 (*Implementation of the data file management*)
 
-(*These data types are just drafts to implement basic funcitonality, 
+(*These data types are just drafts to implement basic functionality, 
   change as you will*)
 type task = {id : int; assignee : string; title : string; description : string}
 
@@ -18,3 +18,6 @@ let get_task_data filename search in_descr=
     | exception (End_of_file) -> Unsuccessful 
                                    ("Unable to find anything that matches: " ^ 
                                     search) in failwith ""
+
+let add_data filename data = 
+  failwith "todo"                               

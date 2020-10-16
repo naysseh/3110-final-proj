@@ -12,3 +12,7 @@ exception Not_found of string
    Raises [NotFound condition] if nothing was found correspondent to the search 
    condition. *)
 val get_data : string -> string -> bool -> 'a
+
+(** [add_data filename data] is a function that writes the given [data] into 
+    the file found at [filename]. *)
+val add_data : string -> 'a -> 'a
