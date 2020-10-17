@@ -20,4 +20,6 @@ let get_task_data filename search in_descr=
                                     search) in failwith ""
 
 let add_data filename data = 
-  failwith "todo"                               
+  let channel = open_out_gen [Open_append] 0o640 filename in
+  output_string channel ("\n" ^ data); 
+  close_out channel;
