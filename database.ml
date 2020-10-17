@@ -31,6 +31,7 @@ let get_task_data filename search : task_search_result=
       else parse_line chnl acc
     | exception End_of_file -> acc in
   let search_results = parse_line channel [] in
+  close_in channel;
   if List.length search_results != 0 then Success search_results 
   else Unsuccessful ("Could not find anything matching: " ^ search)
 
