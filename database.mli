@@ -15,4 +15,4 @@ val get_data : string -> string -> bool -> 'a
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
-val add_data : string -> 'a -> 'a
+val add_data : string -> 'a -> unit
