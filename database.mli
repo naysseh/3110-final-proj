@@ -11,7 +11,7 @@ exception Not_found of string
    Raises [InvalidFile filename] if such file does not exist
    Raises [NotFound condition] if nothing was found correspondent to the search 
    condition. *)
-val get_data : string -> string -> bool -> 'a
+val get_task_data : string -> string -> 'a
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)

@@ -37,9 +37,6 @@ let get_task_data filename search : task_search_result=
   if List.length search_results != 0 then Success search_results 
   else Unsuccessful ("Could not find anything matching: " ^ search)
 
-let get_data filename condition in_description =
-  failwith "Unimplemented"
-
 let add_data filename data = 
   let channel = open_out_gen [Open_append] 0o640 filename in
   output_string channel ("\n" ^ data); 
