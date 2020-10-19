@@ -43,8 +43,7 @@ let get_data filename condition in_description =
 let add_data filename data = 
   let channel = open_out_gen [Open_append] 0o640 filename in
   output_string channel ("\n" ^ data); 
-  close_out channel;
-;; (* Statement terminator because the current definition includes my code lol *)
+  close_out channel
 
 (* Right now, this just overwrites the whole file, so DON'T USE IT UNLESS YOUR
    DATA IS BACKED UP!! I'm working on what to do next :) *)
