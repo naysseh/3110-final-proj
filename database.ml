@@ -3,8 +3,10 @@
 (*These data types are just drafts to implement basic functionality, 
   change as you will*)
 type task = {id : int; assignee : string; title : string; status : string; description : string}
-
 type team = {team_name : string; members : string list}
+
+exception InvalidFile of string
+exception Not_found of string
 
 type task_search_result = 
   | Success of task list
@@ -35,7 +37,18 @@ let get_task_data filename search : task_search_result=
   if List.length search_results != 0 then Success search_results 
   else Unsuccessful ("Could not find anything matching: " ^ search)
 
+let get_data filename condition in_description =
+  failwith "Unimplemented"
+
 let add_data filename data = 
   let channel = open_out_gen [Open_append] 0o640 filename in
   output_string channel ("\n" ^ data); 
   close_out channel;
+;; (* Statement terminator because the current definition includes my code lol *)
+
+(* Right now, this just overwrites the whole file, so DON'T USE IT UNLESS YOUR
+   DATA IS BACKED UP!! I'm working on what to do next :) *)
+let update_data filename predicate field data =
+  let channel = open_out filename in
+  output_string channel data;
+  close_out channel
