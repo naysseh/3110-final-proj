@@ -15,8 +15,9 @@ val get_task_data : string -> string -> 'a
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
-val add_data : string -> 'a -> unit
+val add_data : string -> string -> unit
 
+val add_task_data: string -> unit
 (** [update_data filename predicate field data] writes over property [field] of 
     the data identified by [predicate] in file [filename] with [data].
 

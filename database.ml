@@ -42,6 +42,30 @@ let add_data filename data =
   output_string channel ("\n" ^ data); 
   close_out channel
 
+(* this just converts given task to string form so i could use in file *)
+let record_to_string (task : task) : string = 
+  string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ task.title ^ ";" ^ task.status ^ ";"
+  ^ "\"" ^ task.description ^"\""
+
+(* testing out input from command line here and seeing how it works :) should
+   id autofill to the next available ID? *)
+let add_task_data filename = 
+  let channel = open_out_gen [Open_append] 0o640 filename in
+  print_string "enter id ";
+  let new_id = read_int () in
+  print_string "enter assignee ";
+  let new_assignee = read_line () in
+  print_string "enter title ";
+  let new_title = read_line () in 
+  print_string "enter status ";
+  let new_status = read_line () in 
+  print_string "enter description ";
+  let new_descr = read_line () in
+  output_string channel ("\n" ^ record_to_string(
+      {id = new_id; assignee = new_assignee; title = new_title; 
+       status =  new_status; description = new_descr})); 
+  close_out channel
+
 (* Right now, this just overwrites the whole file, so DON'T USE IT UNLESS YOUR
    DATA IS BACKED UP!! I'm working on what to do next :) *)
 let update_data filename predicate field data =
