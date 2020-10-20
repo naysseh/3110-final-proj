@@ -1,17 +1,26 @@
 (*Signature for database.ml*)
 
-(** Raised when a non-existing file is accessed. *)
-exception InvalidFile of string
+type task = {id : int; assignee : string; title : string; 
+             status : string; description : string}
+type team = {team_name : string; members : string list}
+type search_result = 
+  | Success of string list
+  | Unsuccessful of string
 
 (** Raised when nothing was found in a search*)
-exception Not_found of string
+exception NotFound of string
 
-(**[get_data filename condition in_description] is a record representing the 
-   particular data type, supported by the database
-   Raises [InvalidFile filename] if such file does not exist
-   Raises [NotFound condition] if nothing was found correspondent to the search 
-   condition. *)
-val get_task_data : string -> string -> 'a
+(** [search_tasks criterion] is a list containing all the tasks that contain the
+    search critetion.
+    Raises [NotFound] if nothing was found correspondent to the search 
+    condition. *)
+val search_tasks : string -> task list
+
+(** [search_teams criterion] is a list containing all the teams that contain the
+    search critetion.
+    Raises [NotFound] if nothing was found correspondent to the search 
+    condition. *)
+val search_teams : string -> team list
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
