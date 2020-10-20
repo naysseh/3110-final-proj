@@ -8,8 +8,8 @@ type team = {team_name : string; members : string list}
 exception InvalidFile of string
 exception Not_found of string
 
-type task_search_result = 
-  | Success of task list
+type search_result = 
+  | Success of string list
   | Unsuccessful of string
 
 let string_contains str1 str2= 
@@ -20,22 +20,25 @@ let string_contains str1 str2=
       if (str2 = String.sub str1 i len2) then true else check (succ i) in
     check 0
 
-let get_task_data filename search : task_search_result=
-  let create_task string = 
-    match String.split_on_char ';' string with
-    | id::assignee::title::status::description -> 
-      {id = int_of_string id; assignee = assignee; title = title; status = status; description = List.hd description}
-    | _ -> failwith "mistake with the reading" in
+let get_search_results filename criterion : search_result = 
   let channel = open_in filename in
   let rec parse_line chnl acc= 
     match input_line chnl with 
-    | x -> if string_contains x search then parse_line chnl (create_task x :: acc) 
+    | x -> if string_contains x criterion then parse_line chnl (x :: acc) 
       else parse_line chnl acc
     | exception End_of_file -> acc in
-  let search_results = parse_line channel [] in
+  let results = parse_line channel [] in
   close_in channel;
-  if List.length search_results != 0 then Success search_results 
-  else Unsuccessful ("Could not find anything matching: " ^ search)
+  if List.length results != 0 then Success results 
+  else Unsuccessful ("Could not find anything matching: " ^ criterion)
+
+let create_task string = 
+  match String.split_on_char ';' string with
+  | id::assignee::title::status::description -> 
+    {id = int_of_string id; assignee = assignee; title = title; 
+     status = status; description = List.hd description}
+  | _ -> failwith "mistake with the reading" 
+
 
 let add_data filename data = 
   let channel = open_out_gen [Open_append] 0o640 filename in
