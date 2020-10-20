@@ -3,9 +3,6 @@
 type task = {id : int; assignee : string; title : string; 
              status : string; description : string}
 type team = {team_name : string; members : string list}
-type search_result = 
-  | Success of string list
-  | Unsuccessful of string
 
 (** Raised when nothing was found in a search*)
 exception NotFound of string
