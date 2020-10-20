@@ -5,6 +5,23 @@
 type task = {id : int; assignee : string; title : string; status : string; description : string}
 type team = {team_name : string; members : string list}
 
+(** [string_of_task task] is the string representation of [task]. *)
+let string_of_task (task : task) : string = 
+  string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ task.title ^ ";" ^ task.status ^ ";"
+  ^ "\"" ^ task.description ^"\""
+
+(** [task_of_string str] is the type task representation of [str].
+    Requires: [str] has a valid representation as a task. *)
+let task_of_string (str : string) : task =
+  match String.split_on_char ';' str with
+  | id::assignee::title::status::description::[] -> 
+    {id = int_of_string id;
+     assignee = assignee; 
+     title = title; 
+     status = status; 
+     description = description}
+  | _ -> failwith "Unexpected input"
+
 exception InvalidFile of string
 exception Not_found of string
 
@@ -20,7 +37,7 @@ let string_contains str1 str2=
       if (str2 = String.sub str1 i len2) then true else check (succ i) in
     check 0
 
-let get_task_data filename search : task_search_result=
+let get_task_data filename search : task_search_result =
   let create_task string = 
     match String.split_on_char ';' string with
     | id::assignee::title::status::description -> 
@@ -42,11 +59,6 @@ let add_data filename data =
   output_string channel ("\n" ^ data); 
   close_out channel
 
-(* this just converts given task to string form so i could use in file *)
-let record_to_string (task : task) : string = 
-  string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ task.title ^ ";" ^ task.status ^ ";"
-  ^ "\"" ^ task.description ^"\""
-
 (* testing out input from command line here and seeing how it works :) should
    id autofill to the next available ID? *)
 let add_task_data filename = 
@@ -61,7 +73,7 @@ let add_task_data filename =
   let new_status = read_line () in 
   print_string "enter description ";
   let new_descr = read_line () in
-  output_string channel ("\n" ^ record_to_string(
+  output_string channel ("\n" ^ string_of_task(
       {id = new_id; assignee = new_assignee; title = new_title; 
        status =  new_status; description = new_descr})); 
   close_out channel
