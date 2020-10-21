@@ -64,20 +64,18 @@ let form_task_list task_strings =
 
 let form_teams_list team_strings = 
   form_list team_strings [] create_team
-(********General Helpers********)
 
-(*Redundant with create_task*)
-(** [task_of_string str] is the type task representation of [str].
-    Requires: [str] has a valid representation as a task. *)
-let task_of_string (str : string) : task =
-  match String.split_on_char ';' str with
-  | id::assignee::title::status::description::[] -> 
-    {id = int_of_string id;
-     assignee = assignee; 
-     title = title; 
-     status = status; 
-     description = description}
-  | _ -> failwith "Unexpected input"
+(* We got lucky since the only field we need to change are strings. If we need
+   to alter the id of a task, then we need to create a new algebraic data type. *)
+let update_task_field task data = function
+  | "id" -> failwith "Id is not mutable"
+  | "assignee" -> {task with assignee=data}
+  | "title" -> {task with title=data}
+  | "status" -> {task with status=data}
+  | "description" -> {task with description=data}
+  | _ -> raise Not_found
+
+(********General Helpers********)
 
 let search_tasks criterion = 
   match get_search_results "issues.txt" criterion with
@@ -113,9 +111,31 @@ let add_task_data filename =
        status =  new_status; description = new_descr})); 
   close_out channel
 
-(* Right now, this just overwrites the whole file, so DON'T USE IT UNLESS YOUR
-   DATA IS BACKED UP!! I'm working on what to do next :) *)
-let update_data filename predicate field data =
-  let channel = open_out filename in
-  output_string channel data;
-  close_out channel
+let get_task_and_pos_by_id filename id =
+  let channel = open_in filename in
+  let rec parse_line ic id depth =
+    let line = input_line ic in
+    match create_task line with 
+    (* Think about a higher-order function that parametrizes comparison
+       and what is returned. *)
+    | x when x.id = id -> (pos_in ic - String.length line - 1, create_task line)
+    | x -> parse_line ic id (depth + String.length line) in
+  let pos = parse_line channel id 0 in
+  close_in channel; pos
+
+let update_task_data
+    (filename : string)
+    (id : int)
+    (field : string)
+    (data : string) : unit =
+  let (pos, task) = get_task_and_pos_by_id filename id in
+  let oc = open_out_gen [Open_wronly] 0o640 filename in
+  seek_out oc pos;
+  output_string oc (string_of_task (update_task_field task data field));
+  close_out oc
+
+(* Problems:
+   - If the new data is not the exact length of the old data then the
+     update will corrupt itself and/or surrounding data.
+   - 
+*)

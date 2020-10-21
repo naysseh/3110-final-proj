@@ -24,15 +24,7 @@ val search_teams : string -> team list
 val add_data : string -> string -> unit
 
 val add_task_data: string -> unit
-(** [update_data filename predicate field data] writes over property [field] of 
-    the data identified by [predicate] in file [filename] with [data].
 
-    Requires: [predicate : 't -> bool] and [field] are valid for type ['t]
-    represented by the data stored in [filename]. As such, there must also be
-    at least one entry in [filename] that satisfies [predicate]. *)
-val update_data : string -> ('t -> bool) -> string -> string -> unit
-(* Rather than giving a predicate that I am going to require returns true for at least
-   one data entry, I would rather have a separate [search] function give the 
-   locations at which to make changes.
-   Note: what to do about data that is longer than existing data; do the IO
-   functions write over, or insert? *)
+(** [update_task_data filename id field data] writes over property [field] of 
+    the task identified by [id] in file [filename] with [data]. *)
+val update_task_data : string -> int -> string -> string -> unit
