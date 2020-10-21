@@ -130,6 +130,7 @@ let edit_task_data change field id =
         add_line (pred i)
       end
     | exception (End_of_file) -> 
+      flush out;
       close_in inp;
       close_out out;
       Sys.remove "issues.txt";
