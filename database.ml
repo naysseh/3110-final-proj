@@ -75,6 +75,12 @@ let update_task_field task data = function
   | "description" -> {task with description=data}
   | _ -> raise Not_found
 
+let total_tasks = 
+  let chnl = open_in "issues.txt" in
+  let first_line = input_line chnl in
+  match String.split_on_char ';' first_line with
+  | [] -> failwith "mistake"
+  | h::t -> int_of_string h
 (********General Helpers********)
 
 let search_tasks criterion = 
@@ -110,6 +116,9 @@ let add_task_data filename =
       {id = new_id; assignee = new_assignee; title = new_title; 
        status =  new_status; description = new_descr})); 
   close_out channel
+
+let edit_task_data change field id = 
+  failwith ""
 
 let get_task_and_pos_by_id filename id =
   let channel = open_in filename in
