@@ -68,7 +68,7 @@ let form_teams_list team_strings =
 (* We got lucky since the only field we need to change are strings. If we need
    to alter the id of a task, then we need to create a new algebraic data type. *)
 let update_task_field task data = function
-  | "id" -> failwith "Id is not mutable"
+  | "id" -> {task with id = int_of_string data}
   | "assignee" -> {task with assignee=data}
   | "title" -> {task with title=data}
   | "status" -> {task with status=data}
@@ -84,21 +84,7 @@ let total_tasks =
 
 let new_line_task old_line change field = 
   let old_task = create_task old_line in
-  let new_task = match field with 
-    | "assignee" -> {id = old_task.id; assignee = change;
-                     title = old_task.title; status = old_task.status;
-                     description = old_task.description}
-    | "title" -> {id = old_task.id; assignee = old_task.assignee;
-                  title = change; status = old_task.status;
-                  description = old_task.description}
-    | "status" -> {id = old_task.id; assignee = old_task.assignee;
-                   title = old_task.title; status = change;
-                   description = old_task.description}
-    | "description" -> {id = old_task.id; assignee = old_task.assignee;
-                        title = old_task.title; status = old_task.status;
-                        description = change}
-    | _ -> failwith "invalid field" in
-  string_of_task new_task
+  string_of_task (update_task_field old_task change field)
 
 (********General Helpers********)
 
