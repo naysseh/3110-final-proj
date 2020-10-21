@@ -117,6 +117,11 @@ let add_task filename data =
   output_string channel ("%s\n" ^ string_of_task new_task);
   close_out channel
 
+
+(*ERRORS: 1) when not editing descriptions, extra quotes are added (change helpers); 
+  2) new lines are added, leads to breakage when repeated edit, either clean 
+  new lines (inneficient) or check conditions when lines are added;
+  3) something with IDs, i.e. when i put change 2 3 changes, check invariant *)
 let edit_task_data change field id = 
   let num_tasks = total_tasks in
   let temp_file = "issues.temp" in
