@@ -98,23 +98,18 @@ let add_data filename data =
   output_string channel ("\n" ^ data); 
   close_out channel
 
-(* testing out input from command line here and seeing how it works :) should
-   id autofill to the next available ID? *)
-let add_task_data filename = 
-  let channel = open_out_gen [Open_append] 0o640 filename in
-  print_string "enter id ";
-  let new_id = read_int () in
-  print_string "enter assignee ";
-  let new_assignee = read_line () in
-  print_string "enter title ";
-  let new_title = read_line () in 
-  print_string "enter status ";
-  let new_status = read_line () in 
-  print_string "enter description ";
-  let new_descr = read_line () in
-  output_string channel ("\n" ^ string_of_task(
-      {id = new_id; assignee = new_assignee; title = new_title; 
-       status =  new_status; description = new_descr})); 
+(* takes input of all task fields EXCEPT id. id is determined by the id 
+   of the first line pre-existing in the file. 
+   CURRENTLY THIS OVERRIDES THE FIRST LINE OF FILE. be careful!! :( *)
+let add_task filename data =
+  let oc = open_in filename in 
+  let first_line = input_line oc in 
+  let index = String.sub first_line 0 (String.index first_line ';') in 
+  let new_index = int_of_string index + 1 in
+  close_in oc;
+  let new_task = create_task (string_of_int new_index ^ ";" ^ data) in 
+  let channel = open_out_gen [Open_wronly] 0o640 filename in 
+  output_string channel ("%s\n" ^ string_of_task new_task);
   close_out channel
 
 let edit_task_data change field id = 

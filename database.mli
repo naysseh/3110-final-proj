@@ -23,7 +23,7 @@ val search_teams : string -> team list
     the file found at [filename]. *)
 val add_data : string -> string -> unit
 
-val add_task_data: string -> unit
+val add_task : string -> string -> unit
 
 (** [update_task_data filename id field data] writes over property [field] of 
     the task identified by [id] in file [filename] with [data]. *)
