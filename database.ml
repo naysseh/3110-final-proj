@@ -98,10 +98,34 @@ let search_teams criterion =
   | Success x -> form_teams_list x
   | Unsuccessful x -> raise (NotFound criterion)
 
-let add_data filename data = 
-  let channel = open_out_gen [Open_append] 0o640 filename in
-  output_string channel ("\n" ^ data); 
-  close_out channel
+(* ERRORS: skips line 1 - create condition for when to write line *)
+let add_data data = 
+  let total_tasks = total_tasks in 
+  let temp_file = "issues.temp" in
+  let ic = open_in "issues.txt" and oc = open_out temp_file in 
+  let first_line = input_line ic in 
+  let index = String.sub first_line 0 (String.index first_line ';') in 
+  let new_index = int_of_string index + 1 in 
+  let new_task = create_task (string_of_int new_index ^ ";" ^ data) in 
+  output_string oc (string_of_task new_task); 
+  output_char oc '\n';
+  let rec add_line i = 
+    match input_line ic with
+    | line -> 
+      begin
+        output_string oc line; 
+        output_char oc '\n'; 
+        add_line (pred i)
+      end 
+    | exception (End_of_file) ->
+      begin 
+        flush oc;
+        close_in ic;
+        close_out oc;
+        Sys.remove "issues.txt";
+        Sys.rename temp_file "issues.txt" 
+      end in 
+  add_line total_tasks
 
 (* takes input of all task fields EXCEPT id. id is determined by the id 
    of the first line pre-existing in the file. 

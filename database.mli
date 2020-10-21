@@ -23,7 +23,7 @@ val edit_task_data : string -> string -> int -> unit
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
-val add_data : string -> string -> unit
+val add_data : string -> unit
 
 val add_task : string -> string -> unit
 
