@@ -117,6 +117,26 @@ let add_task filename data =
   output_string channel ("%s\n" ^ string_of_task new_task);
   close_out channel
 
+(* WIP: leaves newline at end. Try descending order (get total lines and pred) *)
+let delete_line filename i =
+  let old_file = open_in filename in
+  let temp = filename ^ ".temp" in
+  let new_file = open_out temp in
+  let rec delete_inner acc =
+    match input_line old_file with
+    | line ->
+      begin
+        if acc <> i then output_string new_file (line ^ "\n");
+        delete_inner (succ acc)
+      end
+    | exception (End_of_file) ->
+      begin
+        close_in old_file;
+        close_out new_file;
+        Sys.remove filename;
+        Sys.rename temp filename
+      end
+  in delete_inner 1
 
 (*ERRORS: 1) when not editing descriptions, extra quotes are added (change helpers); 
   2) new lines are added, leads to breakage when repeated edit, either clean 
@@ -143,6 +163,7 @@ let edit_task_data change field id =
   add_line num_tasks
 
 
+(********** DEPRECATED **********)
 let get_task_and_pos_by_id filename id =
   let channel = open_in filename in
   let rec parse_line ic id depth =
@@ -165,9 +186,3 @@ let update_task_data
   seek_out oc pos;
   output_string oc (string_of_task (update_task_field task data field));
   close_out oc
-
-(* Problems:
-   - If the new data is not the exact length of the old data then the
-     update will corrupt itself and/or surrounding data.
-   - 
-*)
