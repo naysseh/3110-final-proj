@@ -81,6 +81,25 @@ let total_tasks =
   match String.split_on_char ';' first_line with
   | [] -> failwith "mistake"
   | h::t -> int_of_string h
+
+let new_line_task old_line change field = 
+  let old_task = create_task old_line in
+  let new_task = match field with 
+    | "assignee" -> {id = old_task.id; assignee = change;
+                     title = old_task.title; status = old_task.status;
+                     description = old_task.description}
+    | "title" -> {id = old_task.id; assignee = old_task.assignee;
+                  title = change; status = old_task.status;
+                  description = old_task.description}
+    | "status" -> {id = old_task.id; assignee = old_task.assignee;
+                   title = old_task.title; status = change;
+                   description = old_task.description}
+    | "description" -> {id = old_task.id; assignee = old_task.assignee;
+                        title = old_task.title; status = old_task.status;
+                        description = change}
+    | _ -> failwith "invalid field" in
+  string_of_task new_task
+
 (********General Helpers********)
 
 let search_tasks criterion = 
@@ -113,7 +132,24 @@ let add_task filename data =
   close_out channel
 
 let edit_task_data change field id = 
-  failwith ""
+  let num_tasks = total_tasks in
+  let temp_file = "issues.temp" in
+  let inp = open_in "issues.txt" and 
+    out = open_out temp_file in
+  let rec add_line i = 
+    match input_line inp with
+    | line -> begin
+        if i != id then ((output_string out line); output_char out '\n';)
+        else output_string out (new_line_task line change field); output_char out '\n';
+        add_line (pred i)
+      end
+    | exception (End_of_file) -> 
+      close_in inp;
+      close_out out;
+      Sys.remove "issues.txt";
+      Sys.rename temp_file "issues.txt"; in
+  add_line num_tasks
+
 
 let get_task_and_pos_by_id filename id =
   let channel = open_in filename in

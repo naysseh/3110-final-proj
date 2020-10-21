@@ -19,6 +19,8 @@ val search_tasks : string -> task list
     condition. *)
 val search_teams : string -> team list
 
+val edit_task_data : string -> string -> int -> unit
+
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
 val add_data : string -> string -> unit
