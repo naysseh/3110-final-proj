@@ -15,6 +15,8 @@ exception NotFound of string
 (********End Exceptions********)
 
 (********Constructors********)
+(*Solve the case where you have ; in description, i.e. 
+  a helper on List.hd description to link all of em tgth*)
 let create_task string = 
   match String.split_on_char ';' string with
   | id::assignee::title::status::description -> 
@@ -162,6 +164,7 @@ let delete_task filename id =
       delete_inner (pred i)
     | exception (End_of_file) ->
       begin
+        flush new_file;
         close_in old_file;
         close_out new_file;
         Sys.remove filename;
@@ -169,8 +172,6 @@ let delete_task filename id =
       end
   in delete_inner start_id
 
-(*ERRORS: 2) new lines are added, leads to breakage when repeated edit, either clean 
-  new lines (inneficient) or check conditions when lines are added; *)
 let edit_task_data change field id = 
   let num_tasks = total_tasks in
   let temp_file = "issues.temp" in
