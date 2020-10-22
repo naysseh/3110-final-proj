@@ -98,15 +98,11 @@ let search_teams criterion =
   | Success x -> form_teams_list x
   | Unsuccessful x -> raise (NotFound criterion)
 
-(* ERRORS: skips line 1 - create condition for when to write line *)
 let add_data data = 
   let total_tasks = total_tasks in 
   let temp_file = "issues.temp" in
   let ic = open_in "issues.txt" and oc = open_out temp_file in 
-  let first_line = input_line ic in 
-  let index = String.sub first_line 0 (String.index first_line ';') in 
-  let new_index = int_of_string index + 1 in 
-  let new_task = create_task (string_of_int new_index ^ ";" ^ data) in 
+  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ data) in 
   output_string oc (string_of_task new_task); 
   output_char oc '\n';
   let rec add_line i = 
@@ -114,7 +110,8 @@ let add_data data =
     | line -> 
       begin
         output_string oc line; 
-        output_char oc '\n'; 
+        if i != 1 then
+          output_char oc '\n'; 
         add_line (pred i)
       end 
     | exception (End_of_file) ->
