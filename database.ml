@@ -92,6 +92,12 @@ let new_line_task old_line change field =
   let old_task = create_task old_line in
   string_of_task (update_task_field old_task change field)
 
+let inc_id task_line =
+  let task = create_task task_line in
+  let change_id id t = update_task_field t id "id" in
+  let new_id = string_of_int (pred task.id) in
+  change_id new_id task |> string_of_task
+
 (********End General Helpers********)
 
 let search_tasks criterion = 
@@ -154,7 +160,8 @@ let delete_task filename id =
     | line ->
       if i <> id then
         begin
-          output_string new_file line;
+          let out_line = if i > id then inc_id line else line in
+          output_string new_file out_line;
           (* If i is 1, then don't make a new line.
              If i is 2, and id is 1, then don't make a new line. *)
           if not (i = 1 || (id = 1 && i = 2)) then output_char new_file '\n';
