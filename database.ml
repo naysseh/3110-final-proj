@@ -141,18 +141,22 @@ let add_task filename data =
   output_string channel ("%s\n" ^ string_of_task new_task);
   close_out channel
 
-(* WIP: leaves newline at end. Try descending order (get total lines and pred) *)
-let delete_line filename i =
+let delete_task filename id =
+  let start_id = total_tasks in
   let old_file = open_in filename in
   let temp = filename ^ ".temp" in
   let new_file = open_out temp in
-  let rec delete_inner acc =
+  let rec delete_inner i =
     match input_line old_file with
     | line ->
-      begin
-        if acc <> i then output_string new_file (line ^ "\n");
-        delete_inner (succ acc)
-      end
+      if i <> id then
+        begin
+          output_string new_file line;
+          (* If i is 1, then don't make a new line.
+             If i is 2, and id is 1, then don't make a new line. *)
+          if not (i = 1 || (id = 1 && i = 2)) then output_char new_file '\n';
+        end;
+      delete_inner (pred i)
     | exception (End_of_file) ->
       begin
         close_in old_file;
@@ -160,7 +164,7 @@ let delete_line filename i =
         Sys.remove filename;
         Sys.rename temp filename
       end
-  in delete_inner 1
+  in delete_inner start_id
 
 (*ERRORS: 1) when not editing descriptions, extra quotes are added (change helpers); 
   2) new lines are added, leads to breakage when repeated edit, either clean 
@@ -185,28 +189,3 @@ let edit_task_data change field id =
       Sys.remove "issues.txt";
       Sys.rename temp_file "issues.txt"; in
   add_line num_tasks
-
-
-(********** DEPRECATED **********)
-let get_task_and_pos_by_id filename id =
-  let channel = open_in filename in
-  let rec parse_line ic id depth =
-    let line = input_line ic in
-    match create_task line with 
-    (* Think about a higher-order function that parametrizes comparison
-       and what is returned. *)
-    | x when x.id = id -> (pos_in ic - String.length line - 1, create_task line)
-    | x -> parse_line ic id (depth + String.length line) in
-  let pos = parse_line channel id 0 in
-  close_in channel; pos
-
-let update_task_data
-    (filename : string)
-    (id : int)
-    (field : string)
-    (data : string) : unit =
-  let (pos, task) = get_task_and_pos_by_id filename id in
-  let oc = open_out_gen [Open_wronly] 0o640 filename in
-  seek_out oc pos;
-  output_string oc (string_of_task (update_task_field task data field));
-  close_out oc
