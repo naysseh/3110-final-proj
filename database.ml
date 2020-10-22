@@ -8,11 +8,11 @@ type search_result =
   | Success of string list
   | Unsuccessful of string
 
-(********Types********)
+(********End Types********)
 
 (********Exceptions********)
 exception NotFound of string
-(********Exceptions********)
+(********End Exceptions********)
 
 (********Constructors********)
 let create_task string = 
@@ -26,7 +26,7 @@ let create_team string =
   match String.split_on_char ';' string with
   | h::t -> {team_name = h; members = t}
   | _ -> failwith "mistake creating a team"
-(********Constructors********)
+(********End Constructors********)
 
 (********General Helpers********)
 let string_contains str1 str2= 
@@ -86,7 +86,7 @@ let new_line_task old_line change field =
   let old_task = create_task old_line in
   string_of_task (update_task_field old_task change field)
 
-(********General Helpers********)
+(********End General Helpers********)
 
 let search_tasks criterion = 
   match get_search_results "issues.txt" criterion with
