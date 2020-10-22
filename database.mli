@@ -25,10 +25,10 @@ val search_teams : string -> team list
     exists in the file. *)
 val delete_task : string -> int -> unit
 
+(** [edit_task_data change field id] edits the textual representation of the 
+    task data with id number id, changing the field field to change *)
 val edit_task_data : string -> string -> int -> unit
 
 (** [add_data filename data] is a function that writes the given [data] into 
     the file found at [filename]. *)
 val add_data : string -> unit
-
-val add_task : string -> string -> unit

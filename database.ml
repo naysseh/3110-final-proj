@@ -21,7 +21,11 @@ let create_task string =
   match String.split_on_char ';' string with
   | id::assignee::title::status::description -> 
     {id = int_of_string id; assignee = assignee; title = title; 
-     status = status; description = List.hd description}
+     status = status; 
+     description =
+       if List.length description = 1 && List.hd description = ""  then "" else
+         let temp_descr = List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
+         String.sub temp_descr 1 ((String.length temp_descr) - 1)}
   | _ -> failwith "mistake with the reading" 
 
 let create_team string = 
@@ -138,20 +142,6 @@ let add_data data =
       end in 
   add_line total_tasks
 
-(* takes input of all task fields EXCEPT id. id is determined by the id 
-   of the first line pre-existing in the file. 
-   CURRENTLY THIS OVERRIDES THE FIRST LINE OF FILE. be careful!! :( *)
-let add_task filename data =
-  let oc = open_in filename in 
-  let first_line = input_line oc in 
-  let index = String.sub first_line 0 (String.index first_line ';') in 
-  let new_index = int_of_string index + 1 in
-  close_in oc;
-  let new_task = create_task (string_of_int new_index ^ ";" ^ data) in 
-  let channel = open_out_gen [Open_wronly] 0o640 filename in 
-  output_string channel ("%s\n" ^ string_of_task new_task);
-  close_out channel
-
 let delete_task filename id =
   let start_id = total_tasks in
   let old_file = open_in filename in
@@ -187,7 +177,7 @@ let edit_task_data change field id =
   let rec add_line i = 
     match input_line inp with
     | line -> begin
-        if i != id then ((output_string out line); (*output_char out '\n';*))
+        if i != id then (output_string out line;)
         else output_string out (new_line_task line change field); output_char out '\n';
         add_line (pred i)
       end
