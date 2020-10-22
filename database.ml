@@ -40,7 +40,7 @@ let string_contains str1 str2=
 (** [string_of_task task] is the string representation of [task]. *)
 let string_of_task (task : task) : string = 
   string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ task.title ^ ";" ^ task.status ^ ";"
-  ^ "\"" ^ task.description ^"\""
+  ^ "\"" ^ task.description ^ "\"" 
 
 let get_search_results filename criterion : search_result = 
   let channel = open_in filename in
@@ -65,13 +65,19 @@ let form_task_list task_strings =
 let form_teams_list team_strings = 
   form_list team_strings [] create_team
 
-(* We got lucky since the only field we need to change are strings. If we need
-   to alter the id of a task, then we need to create a new algebraic data type. *)
 let update_task_field task data = function
-  | "id" -> {task with id = int_of_string data}
-  | "assignee" -> {task with assignee=data}
-  | "title" -> {task with title=data}
-  | "status" -> {task with status=data}
+  | "id" -> {task with id = int_of_string data; 
+                       description = String.sub task.description 1 
+                           (String.length task.description - 2)}
+  | "assignee" -> {task with assignee=data; 
+                             description = String.sub task.description 1 
+                                 (String.length task.description - 2)}
+  | "title" -> {task with title=data; 
+                          description = String.sub task.description 1 
+                              (String.length task.description - 2)}
+  | "status" -> {task with status=data; 
+                           description = String.sub task.description 1 
+                               (String.length task.description - 2)}
   | "description" -> {task with description=data}
   | _ -> raise Not_found
 
@@ -163,10 +169,8 @@ let delete_task filename id =
       end
   in delete_inner start_id
 
-(*ERRORS: 1) when not editing descriptions, extra quotes are added (change helpers); 
-  2) new lines are added, leads to breakage when repeated edit, either clean 
-  new lines (inneficient) or check conditions when lines are added;
-  3) something with IDs, i.e. when i put change 2 3 changes, check invariant *)
+(*ERRORS: 2) new lines are added, leads to breakage when repeated edit, either clean 
+  new lines (inneficient) or check conditions when lines are added; *)
 let edit_task_data change field id = 
   let num_tasks = total_tasks in
   let temp_file = "issues.temp" in
@@ -175,7 +179,7 @@ let edit_task_data change field id =
   let rec add_line i = 
     match input_line inp with
     | line -> begin
-        if i != id then ((output_string out line); output_char out '\n';)
+        if i != id then ((output_string out line); (*output_char out '\n';*))
         else output_string out (new_line_task line change field); output_char out '\n';
         add_line (pred i)
       end
