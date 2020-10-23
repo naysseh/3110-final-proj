@@ -45,8 +45,8 @@ let string_contains str1 str2=
 
 (** [string_of_task task] is the string representation of [task]. *)
 let string_of_task (task : task) : string = 
-  string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ task.title ^ ";" ^ task.status ^ ";"
-  ^ "\"" ^ task.description ^ "\"" 
+  string_of_int task.id ^ ";" ^ task.assignee ^ ";" ^ 
+  task.title ^ ";" ^ task.status ^ ";" ^ "\"" ^ task.description ^ "\"" 
 
 let get_search_results filename criterion : search_result = 
   let channel = open_in filename in
@@ -104,6 +104,9 @@ let inc_id task_line =
   let new_id = string_of_int (pred task.id) in
   change_id new_id task |> string_of_task
 
+let list_to_string data = 
+  String.concat ";" data
+
 (********End General Helpers********)
 
 let search_tasks criterion = 
@@ -116,11 +119,12 @@ let search_teams criterion =
   | Success x -> form_teams_list x
   | Unsuccessful x -> raise (NotFound criterion)
 
-let add_data data = 
+let add_data filename data = 
+  let new_data = list_to_string data in 
   let total_tasks = total_tasks in 
   let temp_file = "issues.temp" in
-  let ic = open_in "issues.txt" and oc = open_out temp_file in 
-  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ data) in 
+  let ic = open_in filename and oc = open_out temp_file in 
+  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
   output_string oc (string_of_task new_task); 
   output_char oc '\n';
   let rec add_line i = 
@@ -137,8 +141,8 @@ let add_data data =
         flush oc;
         close_in ic;
         close_out oc;
-        Sys.remove "issues.txt";
-        Sys.rename temp_file "issues.txt" 
+        Sys.remove filename;
+        Sys.rename temp_file filename 
       end in 
   add_line total_tasks
 

@@ -30,5 +30,6 @@ val delete_task : string -> int -> unit
 val edit_task_data : string -> string -> int -> unit
 
 (** [add_data filename data] is a function that writes the given [data] into 
-    the file found at [filename]. *)
-val add_data : string -> unit
+    the file found at [filename]. The new data is appended to the top line of 
+    the file. *)
+val add_data : string -> string list -> unit
