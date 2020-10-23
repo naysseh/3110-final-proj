@@ -119,15 +119,34 @@ let search_teams criterion =
   | Success x -> form_teams_list x
   | Unsuccessful x -> raise (NotFound criterion)
 
-let add_data filename data = 
-  let new_data = list_to_string data in 
-  let total_tasks = total_tasks in 
-  let temp_file = "issues.temp" in
-  let ic = open_in filename and oc = open_out temp_file in 
-  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
-  output_string oc (string_of_task new_task); 
-  output_char oc '\n';
-  let rec add_line i = 
+let mod_tasks
+    (mod_line : string -> int -> 'a -> out_channel -> unit)
+    (data : 'a) : unit =
+  let ic = open_in "issues.txt" in
+  let temp = "issues.txt.temp" in
+  let oc = open_out temp in
+  let rec process i =
+    match input_line ic with
+    | line -> mod_line line i data oc; process (pred i)
+    | exception (End_of_file) ->
+      begin
+        flush oc;
+        close_in ic;
+        close_out oc;
+        Sys.remove "issues.txt";
+        Sys.rename temp "issues.txt"
+      end
+  in process total_tasks
+
+(* let add_data filename data = 
+   let new_data = list_to_string data in 
+   let total_tasks = total_tasks in 
+   let temp_file = "issues.temp" in
+   let ic = open_in filename and oc = open_out temp_file in 
+   let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
+   output_string oc (string_of_task new_task); 
+   output_char oc '\n';
+   let rec add_line i = 
     match input_line ic with
     | line -> 
       begin
@@ -144,41 +163,42 @@ let add_data filename data =
         Sys.remove filename;
         Sys.rename temp_file filename 
       end in 
-  add_line total_tasks
+   add_line total_tasks *)
 
-let delete_task filename id =
-  let start_id = total_tasks in
-  let old_file = open_in filename in
-  let temp = filename ^ ".temp" in
-  let new_file = open_out temp in
-  let rec delete_inner i =
-    match input_line old_file with
-    | line ->
-      if i <> id then
-        begin
-          let out_line = if i > id then inc_id line else line in
-          output_string new_file out_line;
-          (* If i is 1, then don't make a new line.
-             If i is 2, and id is 1, then don't make a new line. *)
-          if not (i = 1 || (id = 1 && i = 2)) then output_char new_file '\n';
-        end;
-      delete_inner (pred i)
-    | exception (End_of_file) ->
+let add_task data =
+  let tot = total_tasks in
+  let new_task =
+    list_to_string data
+    |> (fun s -> string_of_int (tot + 1) ^ ";" ^ s)
+    |> create_task
+    |> string_of_task
+    |> (fun s -> if tot > 1 then s ^ "\n" else s) in
+  let append line i new_line oc =
+    begin
+      if i = tot then output_string oc new_line;
+      output_string oc line;
+      if i > 1 then output_char oc '\n'
+    end
+  in mod_tasks append new_task
+
+let delete_task id =
+  let incl line i del oc =
+    if i <> del then
       begin
-        flush new_file;
-        close_in old_file;
-        close_out new_file;
-        Sys.remove filename;
-        Sys.rename temp filename
+        let out_line = if i > del then inc_id line else line in
+        output_string oc out_line;
+        (* If i is 1, then don't make a new line.
+           If i is 2, and id is 1, then don't make a new line. *)
+        if not (i = 1 || (id = 1 && i = 2)) then output_char oc '\n'
       end
-  in delete_inner start_id
+  in mod_tasks incl id
 
-let edit_task_data change field id = 
-  let num_tasks = total_tasks in
-  let temp_file = "issues.temp" in
-  let inp = open_in "issues.txt" and 
+(* let edit_task_data change field id = 
+   let num_tasks = total_tasks in
+   let temp_file = "issues.temp" in
+   let inp = open_in "issues.txt" and 
     out = open_out temp_file in
-  let rec add_line i = 
+   let rec add_line i = 
     match input_line inp with
     | line -> begin
         if i != id then (output_string out line;)
@@ -191,4 +211,14 @@ let edit_task_data change field id =
       close_out out;
       Sys.remove "issues.txt";
       Sys.rename temp_file "issues.txt"; in
-  add_line num_tasks
+   add_line num_tasks *)
+
+let edit_task change field id =
+  let edit line i (change, field, id) oc =
+    begin
+      let out_line = if i <> id then line
+        else new_line_task line change field
+      in output_string oc out_line;
+      if i > 1 then output_char oc '\n'
+    end
+  in mod_tasks edit (change, field, id)

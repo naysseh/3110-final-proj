@@ -19,17 +19,13 @@ val search_tasks : string -> task list
     condition. *)
 val search_teams : string -> team list
 
-(** [delete_task filename id] removes the task with id matching [id] from the 
-    file corresponding to [filename].
-    Requires: [filename] is the store for tasks, and a task of id [id]
-    exists in the file. *)
-val delete_task : string -> int -> unit
+(** [delete_task id] removes the task with id matching [id]. *)
+val delete_task : int -> unit
 
-(** [edit_task_data change field id] edits the textual representation of the 
-    task data with id number id, changing the field field to change *)
-val edit_task_data : string -> string -> int -> unit
+(** [edit_task change field id] edits the textual representation of the 
+    task data with id number [id], changing the field [field] to [change]. *)
+val edit_task : string -> string -> int -> unit
 
-(** [add_data filename data] is a function that writes the given [data] into 
-    the file found at [filename]. The new data is appended to the top line of 
-    the file. *)
-val add_data : string -> string list -> unit
+(** [add_task data] writes the given [data] into a task. The new task is added
+    to the top of the task database. *)
+val add_task : string list -> unit
