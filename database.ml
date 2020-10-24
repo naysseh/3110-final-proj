@@ -87,8 +87,8 @@ let update_task_field task data = function
   | "description" -> {task with description=data}
   | _ -> raise Not_found
 
-let total_tasks = 
-  let chnl = open_in "issues.txt" in
+let total_tasks filename = 
+  let chnl = open_in filename in
   let first_line = input_line chnl in
   match String.split_on_char ';' first_line with
   | [] -> failwith "mistake"
@@ -137,7 +137,7 @@ let mod_tasks
         Sys.remove "issues.txt";
         Sys.rename temp "issues.txt"
       end
-  in process total_tasks
+  in process (total_tasks "")
 
 (*
 let edit_oper num_tasks closing inp out id change field= 
@@ -171,7 +171,7 @@ let file_operation_generalization oper change field id=
 let edit_task change field id = 
   file_operation_generalization (edit_oper) change field id  *)
 
-let add_data filename data = 
+let add_data filename data  = 
   let new_data = list_to_string data in 
   (* changed total task code here so it updates each time the 
      function is called *)
@@ -181,7 +181,7 @@ let add_data filename data =
     match String.split_on_char ';' first_line with
     | [] -> failwith "mistake"
     | h::t -> int_of_string h in 
-  let temp_file = "issues.temp" in
+  let temp_file = filename ^ ".temp" in
   let ic = open_in filename and oc = open_out temp_file in 
   let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
   output_string oc (string_of_task new_task); 
@@ -205,10 +205,32 @@ let add_data filename data =
       end in 
   add_line total_tasks
 
+(*For all data types*)
+let add_data_all filename data id_required = 
+  let temp_file = filename ^ ".temp" in
+  let inp = open_in filename and out = open_out temp_file in
+  let new_data = if id_required then (string_of_int (total_tasks filename + 1)) 
+                                     ^ ";" ^ (String.concat ";" data)
+    else String.concat ";" data in
+  output_string out new_data; output_char out '\n';
+  let rec add_line i = 
+    match input_line inp with
+    | line -> 
+      output_string out line; output_char out '\n'; 
+      add_line i;
+    | exception (End_of_file) ->
+      begin 
+        flush out;
+        close_in inp;
+        close_out out;
+        Sys.remove filename;
+        Sys.rename temp_file filename; 
+      end in 
+  add_line 1
 
 (*Review conversion of string to task and back - redundancy and inneficient*)
 let add_task data =
-  let tot = total_tasks in
+  let tot = total_tasks "" in
   let new_task =
     list_to_string data
     |> (fun s -> string_of_int (tot + 1) ^ ";" ^ s)

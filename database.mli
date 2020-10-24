@@ -22,6 +22,8 @@ val search_teams : string -> team list
 (** [delete_task id] removes the task with id matching [id]. *)
 val delete_task : int -> unit
 
+val add_data_all : string -> string list -> bool -> unit
+
 (** [edit_task change field id] edits the textual representation of the 
     task data with id number [id], changing the field [field] to [change]. *)
 val edit_task : string -> string -> int -> unit
