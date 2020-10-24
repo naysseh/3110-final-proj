@@ -254,8 +254,8 @@ let delete_task id =
         let out_line = if i > del then inc_id line else line in
         output_string oc out_line;
         (* If i is 1, then don't make a new line.
-           If i is 2, and id is 1, then don't make a new line. *)
-        if not (i = 1 || (id = 1 && i = 2)) then output_char oc '\n'
+           If i is 2, and del is 1, then don't make a new line. *)
+        if not (i = 1 || (del = 1 && i = 2)) then output_char oc '\n'
       end
   in mod_tasks incl id
 
