@@ -29,3 +29,5 @@ val edit_task : string -> string -> int -> unit
 (** [add_task data] writes the given [data] into a task. The new task is added
     to the top of the task database. *)
 val add_task : string list -> unit
+
+val add_data : string -> string list -> unit
