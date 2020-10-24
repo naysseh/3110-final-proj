@@ -90,6 +90,7 @@ let update_task_field task data = function
 let total_tasks filename = 
   let chnl = open_in filename in
   let first_line = input_line chnl in
+  close_in chnl;
   match String.split_on_char ';' first_line with
   | [] -> failwith "mistake"
   | h::t -> int_of_string h
@@ -175,13 +176,7 @@ let add_data filename data  =
   let new_data = list_to_string data in 
   (* changed total task code here so it updates each time the 
      function is called *)
-  let total_tasks =
-    let chnl = open_in "issues.txt" in
-    let first_line = input_line chnl in
-    close_in chnl;
-    match String.split_on_char ';' first_line with
-    | [] -> failwith "mistake"
-    | h::t -> int_of_string h in 
+  let total_tasks = total_tasks filename in
   let temp_file = filename ^ ".temp" in
   let ic = open_in filename and oc = open_out temp_file in 
   let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
