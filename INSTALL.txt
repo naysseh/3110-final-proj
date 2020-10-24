@@ -1,7 +1,12 @@
-Welcome to Trackio!
+Welcome to Trakio!
 
 Once in the correct directory, use the command "make build" to compile the 
 program. This will check the types in the database file accordingly. 
 
 When testing the functions in database.ml, use the created file "issues.txt" 
-as the file containing tasks, or "teams.txt" as the file containing teams.
+as the file containing tasks.
+
+To test interactively, use the command "make" to launch utop. To use the current,
+under development, database functions use Database.xxx
+
+To run the test suite run make test

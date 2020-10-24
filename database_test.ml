@@ -13,7 +13,7 @@ let search_tasks_test (name : string) (criteria : string)
 let search_tasks_with_add_test (name : string) (criteria : string) 
     (add : string list) (expected_output) = 
   name >:: (fun _ -> 
-      add_task add;
+      add_data "issues.txt" add;
       assert_equal (List.sort_uniq compare expected_output) (
         List.sort_uniq compare (search_tasks criteria)))
 
@@ -29,6 +29,13 @@ let search_teams_test (name : string) (criteria : string)
   name >:: (fun _ -> 
       assert_equal (List.sort_uniq compare expected_output) (
         List.sort_uniq compare (search_teams criteria)))
+
+let search_tasks_with_edit_test (name : string) (criteria : string) change
+    field id (expected_output) = 
+  name >:: (fun _ -> 
+      edit_task change field id;
+      assert_equal (List.sort_uniq compare expected_output) (
+        List.sort_uniq compare (search_tasks criteria)))
 
 (********************************************************************
    End helper functions.
@@ -69,6 +76,9 @@ let database_tests =
     search_tasks_with_delete_test "deleting Gries task" "sleep" 5
       [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
         description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    search_tasks_with_edit_test "make Andrii jump" "Jump" "Jump" "title" 1
+      [{id = 1; assignee = "Andrii"; title = "Jump"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
   ]
 
 let suite =
