@@ -15,6 +15,9 @@ build:
 test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
 
+zip:
+	zip trakio.zip *.ml* *.txt _tags Makefile
+
 docs: docs-public docs-private
 
 docs-public: build
@@ -30,4 +33,4 @@ docs-private: build
 
 clean:
 	ocamlbuild -clean
-	rm -rf doc.public doc.private
+	rm -rf doc.public doc.private trakio.zip
