@@ -98,12 +98,11 @@ let new_line_task old_line change field =
   let old_task = create_task old_line in
   string_of_task (update_task_field old_task change field)
 
-(*Inneficient, easier to just modify the string*)
-let inc_id task_line =
-  let task = create_task task_line in
-  let change_id id t = update_task_field t id "id" in
-  let new_id = string_of_int (pred task.id) in
-  change_id new_id task |> string_of_task
+let dec_id task_line =
+  let delim = String.index task_line ';' in
+  let id = int_of_string (String.sub task_line 0 delim) in
+  let rest = String.sub task_line delim (String.length task_line - delim) in
+  string_of_int (id - 1) ^ rest
 
 let list_to_string data = 
   String.concat ";" data
@@ -251,7 +250,7 @@ let delete_task id =
   let incl line i del oc =
     if i <> del then
       begin
-        let out_line = if i > del then inc_id line else line in
+        let out_line = if i > del then dec_id line else line in
         output_string oc out_line;
         (* If i is 1, then don't make a new line.
            If i is 2, and del is 1, then don't make a new line. *)
