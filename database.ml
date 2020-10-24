@@ -178,6 +178,7 @@ let add_data filename data  =
   let total_tasks =
     let chnl = open_in "issues.txt" in
     let first_line = input_line chnl in
+    close_in chnl;
     match String.split_on_char ';' first_line with
     | [] -> failwith "mistake"
     | h::t -> int_of_string h in 
