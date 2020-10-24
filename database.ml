@@ -137,7 +137,7 @@ let mod_tasks
         Sys.remove "issues.txt";
         Sys.rename temp "issues.txt"
       end
-  in process (total_tasks "")
+  in process (total_tasks "issues.txt")
 
 (*
 let edit_oper num_tasks closing inp out id change field= 
