@@ -98,6 +98,7 @@ let new_line_task old_line change field =
   let old_task = create_task old_line in
   string_of_task (update_task_field old_task change field)
 
+(*Inneficient, easier to just modify the string*)
 let inc_id task_line =
   let task = create_task task_line in
   let change_id id t = update_task_field t id "id" in
@@ -138,6 +139,38 @@ let mod_tasks
       end
   in process total_tasks
 
+(*
+let edit_oper num_tasks closing inp out id change field= 
+  let rec add_line i = 
+    match input_line inp with
+    | line -> begin
+        if i != id then (output_string out line;)
+        else output_string out (new_line_task line change field); output_char out '\n';
+        add_line (pred i)
+      end
+    | exception (End_of_file) -> 
+      closing in
+  add_line num_tasks
+
+let file_operation_generalization oper change field id=
+  let total_tasks = total_tasks in
+  let temp_file = "issues.txt.temp" in
+  let inp = open_in "issues.txt" and 
+    out = open_out temp_file in
+  (*custom code*)
+  let closing = 
+    begin 
+      flush out;
+      close_in inp;
+      close_out out;
+      Sys.remove "issues.txt";
+      Sys.rename temp_file "issues.txt" 
+    end in
+  oper total_tasks closing inp out
+
+let edit_task change field id = 
+  file_operation_generalization (edit_oper) change field id  *)
+
 (* let add_data filename data = 
    let new_data = list_to_string data in 
    let total_tasks = total_tasks in 
@@ -165,6 +198,8 @@ let mod_tasks
       end in 
    add_line total_tasks *)
 
+
+(*Review conversion of string to task and back - redundancy and inneficient*)
 let add_task data =
   let tot = total_tasks in
   let new_task =
@@ -180,6 +215,7 @@ let add_task data =
       if i > 1 then output_char oc '\n'
     end
   in mod_tasks append new_task
+
 
 let delete_task id =
   let incl line i del oc =
@@ -212,6 +248,7 @@ let delete_task id =
       Sys.remove "issues.txt";
       Sys.rename temp_file "issues.txt"; in
    add_line num_tasks *)
+
 
 let edit_task change field id =
   let edit line i (change, field, id) oc =
