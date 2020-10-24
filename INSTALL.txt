@@ -1,0 +1,7 @@
+Welcome to Trackio!
+
+Once in the correct directory, use the command "make build" to compile the 
+program. This will check the types in the database file accordingly. 
+
+When testing the functions in database.ml, use the created file "issues.txt" 
+as the file containing tasks, or "teams.txt" as the file containing teams.
