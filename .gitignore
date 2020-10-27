@@ -1,6 +1,7 @@
 # project
 doc.public
 doc.private
+*.zip
 
 # ocaml
 *.cmo

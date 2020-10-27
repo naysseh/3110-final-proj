@@ -16,7 +16,7 @@ test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
 
 zip:
-	zip trakio.zip *.ml* *.txt _tags Makefile
+	zip trakio.zip *.ml* *.txt _tags .ocamlinit .merlin Makefile
 
 docs: docs-public docs-private
 
