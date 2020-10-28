@@ -1,5 +1,5 @@
 # add modules as our codebase evolves
-MODULES=database
+MODULES=database cluster
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
