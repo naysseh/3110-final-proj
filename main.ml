@@ -51,7 +51,6 @@ let main () =
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | create -> ()
-  | username -> ()
+  | string -> ()
 
 let () = main ()
