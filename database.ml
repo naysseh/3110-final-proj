@@ -200,7 +200,7 @@ let add_data filename data  =
       end in 
   add_line total_tasks
 
-(*For all data types*)
+(*For all data types, use that*)
 let add_data_all filename data id_required = 
   let temp_file = filename ^ ".temp" in
   let inp = open_in filename and out = open_out temp_file in
