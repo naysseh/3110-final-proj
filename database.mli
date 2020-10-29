@@ -3,6 +3,7 @@
 type task = {id : int; assignee : string; title : string; 
              status : string; description : string}
 type team = {team_name : string; members : string list}
+type login_details = {username : string; password : string}
 
 (** Raised when nothing was found in a search*)
 exception NotFound of string
@@ -18,6 +19,8 @@ val search_tasks : string -> task list
     Raises [NotFound] if nothing was found correspondent to the search 
     condition. *)
 val search_teams : string -> team list
+
+val search_logins : string -> login_details list
 
 (** [delete_task id] removes the task with id matching [id]. *)
 val delete_task : int -> unit

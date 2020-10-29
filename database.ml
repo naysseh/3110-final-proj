@@ -4,6 +4,7 @@
 type task = {id : int; assignee : string; title : string; 
              status : string; description : string}
 type team = {team_name : string; members : string list}
+type login_details = {username : string; password : string}
 type search_result = 
   | Success of string list
   | Unsuccessful of string
@@ -32,6 +33,15 @@ let create_team string =
   match String.split_on_char ';' string with
   | h::t -> {team_name = h; members = t}
   | _ -> failwith "mistake creating a team"
+
+let create_login string = 
+  match String.split_on_char ';' string with
+  | [] -> failwith ""
+  | h::t -> begin
+      match t with 
+      | h1::t1 -> {username = h; password = h1}
+      | [] -> failwith ""
+    end
 (********End Constructors********)
 
 (********General Helpers********)
@@ -70,6 +80,9 @@ let form_task_list task_strings =
 
 let form_teams_list team_strings = 
   form_list team_strings [] create_team
+
+let form_login_list login_strings = 
+  form_list login_strings [] create_login
 
 let update_task_field task data = function
   | "id" -> {task with id = int_of_string data; 
@@ -118,6 +131,11 @@ let search_tasks criterion =
 let search_teams criterion =
   match get_search_results "teams.txt" criterion with
   | Success x -> form_teams_list x
+  | Unsuccessful x -> raise (NotFound criterion)
+
+let search_logins criterion = 
+  match get_search_results "login_details.txt" criterion with
+  | Success x -> form_login_list x
   | Unsuccessful x -> raise (NotFound criterion)
 
 let mod_tasks
