@@ -2,3 +2,4 @@
 #require "ANSITerminal";;
 #directory "_build";;
 #load "database.cmo";;
+#load "cluster.cmo";;

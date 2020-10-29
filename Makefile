@@ -1,5 +1,5 @@
 # add modules as our codebase evolves
-MODULES=database
+MODULES=database cluster
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
@@ -16,8 +16,13 @@ build:
 test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
 
+<<<<<<< HEAD
 start: 
 	$(OCAMLBUILD) $(MAIN) && ./$(MAIN)
+=======
+zip:
+	zip trakio.zip *.ml* *.txt _tags .ocamlinit .merlin Makefile
+>>>>>>> 55a2f4e16cfc654f0410681496117a3a6694b2d5
 
 docs: docs-public docs-private
 
@@ -34,4 +39,4 @@ docs-private: build
 
 clean:
 	ocamlbuild -clean
-	rm -rf doc.public doc.private
+	rm -rf doc.public doc.private trakio.zip
