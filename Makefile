@@ -4,6 +4,7 @@ OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
 TEST=database_test.byte
+MAIN=main.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 default: build
@@ -14,6 +15,9 @@ build:
 
 test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
+
+start: 
+	$(OCAMLBUILD) $(MAIN) && ./$(MAIN)
 
 docs: docs-public docs-private
 

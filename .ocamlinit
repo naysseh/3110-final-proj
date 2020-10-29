@@ -1,3 +1,4 @@
 #require "ounit2";;
+#require "ANSITerminal";;
 #directory "_build";;
 #load "database.cmo";;
