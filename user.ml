@@ -25,6 +25,9 @@ let manager_task_write assignee task_data (team : team) =
   else raise (User_Not_In_Team assignee)
 (********General Helpers********)
 
+let create_session username = 
+  failwith ""
+
 let add_task_data task_data user assignee = 
   match user.role with
   | Manager -> manager_task_write assignee task_data user.team
@@ -34,7 +37,7 @@ let add_task_data task_data user assignee =
 let rec check_logins logins username = 
   match logins with
   | [] -> raise (NotFound username)
-  | h::t -> if username = h.username then (true, h.password) 
+  | h::t -> if username = h.username then h.password
     else check_logins t username
 
 let log_in username = 
