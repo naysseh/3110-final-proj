@@ -1,25 +1,37 @@
 open Cluster
 
-module Make : MakeCluster = functor (E : EntryType) -> struct
+module TaskCluster : MakeCluster = functor (E : EntryType) -> functor (S : Schema) -> struct
 
   module Entry = E
+  module Sch = S
   type id = Entry.id
+  type field = Entry.field
   type entry = Entry.t
-
-  type search_result = 
-    | Success of string list
-    | Unsuccessful of string
 
   exception NotFound of string
 
+  (* TODO: parametrize cluster by team! *)
   let filename = "issues.txt"
+  let entry_sep = Sch.entry_sep
 
   let rep_ok = failwith "Unimplemented"
 
-  let search criterion = failwith "Unimplemented"
-  (* match get_search_results filename criterion with
-     | Success x -> form_task_list x
-     | Unsuccessful x -> raise (NotFound criterion) *)
+  let total_tasks () = 
+    let chnl = open_in filename in
+    let top_line = input_line chnl in
+    close_in chnl;
+    match String.split_on_char ';' top_line with
+    | [] -> 0
+    | h::_ -> int_of_string h
+
+  let form_list (l : string list) : entry list =
+    List.map Sch.deserialize l
+    |> List.map Entry.create_entry
+
+  let search criterion =
+    match Sch.search filename criterion with
+    | Some x -> form_list x
+    | None -> raise (NotFound criterion)
 
   let add = failwith "Unimplemented"
 

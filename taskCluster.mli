@@ -2,6 +2,6 @@
 
 open Cluster
 
-(** [Make] make a [Cluster] that stores
-    tasks as entries. *)
-module Make : MakeCluster
+(** [TaskCluster] make a [Cluster] that stores
+    tasks as entries within our general file structure. *)
+module TaskCluster : MakeCluster
