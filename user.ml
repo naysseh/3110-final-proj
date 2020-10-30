@@ -33,7 +33,7 @@ let add_task_data task_data user assignee =
 
 let rec check_logins logins username = 
   match logins with
-  | [] -> (false, "")
+  | [] -> raise (NotFound username)
   | h::t -> if username = h.username then (true, h.password) 
     else check_logins t username
 
