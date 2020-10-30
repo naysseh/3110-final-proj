@@ -1,10 +1,3 @@
-(* alter these types, use as results for check_user. failed should return
-   why it failed - either that username doesn't exist or that password doesn't
-   match the given username (given that the username exists) *)
-type user_search_result = 
-  | Success 
-  | Failed 
-
 (* two options... 
    1. make function that checks if user exists as 1 single function, with 
    another function to verify password
@@ -12,26 +5,19 @@ type user_search_result =
    part succeeds. *)
 
 
-(* need to take in a username input from the user, use a function
-   to coordinate w backend and check that the username exists, if succeeded, 
-   return ... success or true? if fails return error stating error  *)
-let check_user user =
-  print_string "hi";
-  true
-
-let rec enter_user user = 
-  if check_user user then 
+(* let rec enter_user user = 
+   if check_user user then 
     begin
       print_string "please enter a different name. that username already exists";
       let new_user = read_line () in 
       enter_user new_user 
     end
-  else 
+   else 
     begin 
       print_string "please enter a password for your new username.";
       let new_pass = read_line () in
       () (* need to put a function here to create a user *)
-    end 
+    end  *)
 
 
 (* let create_user =
@@ -44,6 +30,11 @@ let rec enter_user user =
    print_string "\nThis username already exists. Please enter a new username."; *)
 
 
+(* takes in username and uses backend func to get pass if exists*)
+let check_user user =
+  User.log_in user 
+
+(* need to add data verification for given input *)
 let main () =
   ANSITerminal.(print_string [magenta]
                   "\n\nWelcome to TASKIO\n");
@@ -51,6 +42,7 @@ let main () =
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | string -> ()
+  | username -> ()
+
 
 let () = main ()
