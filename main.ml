@@ -1,10 +1,3 @@
-(* two options... 
-   1. make function that checks if user exists as 1 single function, with 
-   another function to verify password
-   2. function verifies username and then username and password if the first
-   part succeeds. *)
-
-
 (* let rec enter_user user = 
    if check_user user then 
     begin
@@ -19,20 +12,34 @@
       () (* need to put a function here to create a user *)
     end  *)
 
-
-(* let create_user =
-   print_string "\nPlease enter a username for your new account.";
-   let username = read_line () in 
-   enter_user username *)
+(* if a user enters a username that already exists, direct them to enter a new one. 
+   w non-existing username, create new session w create_session *)
+let create_user x =
+  print_endline "Please enter a username for your new account.";
+  match read_line () with 
+  | exception End_of_file -> failwith "lol"
+  | user -> print_endline "use User.create_session here once in interface"
+(* try User.log_in user with Database.NotFound user -> () *)
 (* if check_user username then 
    print_string "\nPlease enter a password."
    else 
    print_string "\nThis username already exists. Please enter a new username."; *)
 
 
-(* takes in username and uses backend func to get pass if exists*)
+(* takes in username, returns password if user exists, otherwise error msg*)
 let check_user user =
-  User.log_in user 
+  try User.log_in user with  
+    Database.NotFound user -> "Your username does not exist. Please enter again
+    or create a new user." 
+
+let password_verify pass =
+  print_endline "Please enter your password.";
+  match read_line () with 
+  | exception End_of_file -> failwith "uhh"
+  | input_pass -> 
+    if input_pass = pass then print_endline "success" 
+    else print_endline 
+        "Your password does not match your inputted username. Please try again." 
 
 (* need to add data verification for given input *)
 let main () =
@@ -42,7 +49,8 @@ let main () =
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | username -> ()
+  | "create" -> create_user "create"
+  | username -> check_user username |> password_verify
 
 
 let () = main ()
