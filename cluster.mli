@@ -28,21 +28,25 @@ end
     file architecture. *)
 module type Schema = sig
 
-  (** [entry_sep] is the character separating entries in the file. *)
-  val entry_sep : char
-
   (** [deserialize line] is the deserialized version of [line]. *)
   val deserialize : string -> string list
+
+  (** [serialize data] is the serialized version of [data]. *)
+  val serialize : string list -> string
 
   (** [search filename criterion] is a [search_result] with entries,
       if any, sharing a substring matching [criterion].
       Requires: [filename] adheres to the specified [Schema]. *)
   val search : string -> string -> string list option
 
-  (** [add filename line] is [true] if [line] was successfully added to
+  (** [add filename line] is true if [line] was successfully added to
       [filename], and false otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
   val add : string -> string -> bool
+
+  (** [modify filename start_id mod_line] is [true] if the file was successfully
+      modified according to [mod_file], and false otherwise. *)
+  val modify : string -> int -> (string -> int -> out_channel -> unit) -> bool
 end
 
 (** A [Cluster] stores data entries in a plaintext file as part of a
