@@ -12,13 +12,36 @@
       () (* need to put a function here to create a user *)
     end  *)
 
+(* if true, input is permitted - false, need to enter new input *)
+let validate_input input = 
+  failwith "not done"
+
+
+(* use this to get a list of tasks... print in table using pretty printing 
+   and have columns based on name,type,finished?,description etc.? *)
+let get_tasks user = 
+  failwith "not done"
+
+
 (* if a user enters a username that already exists, direct them to enter a new one. 
    w non-existing username, create new session w create_session *)
-let create_user x =
+let new_pass user = 
+  print_endline "Please enter a password for your new account";
+  match read_line () with 
+  | exception End_of_file -> failwith "oops"
+  | pass -> "use create_session here"
+
+let rec new_user x =
   print_endline "Please enter a username for your new account.";
   match read_line () with 
   | exception End_of_file -> failwith "lol"
-  | user -> print_endline "use User.create_session here once in interface"
+  | user -> 
+    match User.log_in user with 
+    | exception Database.NotFound user -> new_pass user
+    | string -> 
+      print_endline "user already taken -- need to implement"; 
+      new_user string
+
 (* try User.log_in user with Database.NotFound user -> () *)
 (* if check_user username then 
    print_string "\nPlease enter a password."
@@ -33,7 +56,8 @@ let check_user user =
     or create a new user." 
 
 let password_verify pass =
-  print_endline "Please enter your password.";
+  print_endline "Please enter your password.\n";
+  print_string  "> ";
   match read_line () with 
   | exception End_of_file -> failwith "uhh"
   | input_pass -> 
@@ -49,7 +73,7 @@ let main () =
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | "create" -> create_user "create"
+  | "create" -> () (* new_user "create" *)
   | username -> check_user username |> password_verify
 
 
