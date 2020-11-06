@@ -1,5 +1,5 @@
 # add modules as our codebase evolves
-MODULES=database cluster user main
+MODULES=database cluster taskCluster user main
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

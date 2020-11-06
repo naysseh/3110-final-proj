@@ -13,6 +13,7 @@ module type EntryType = sig
      either we do it here or there. Doing it here is not really in the spirit
      of this module type though. However, we will need some help from this
      module for validating input, so think about how to do that. *)
+  val update_field : field -> t -> t
   val string_of_entry : t -> string list
   (* This is a highly useful operation, but it might depend on
       Cluster-specific logic, like unique field and line delimiters. We can save
@@ -27,6 +28,8 @@ end
 (** A [Schema] provides information and functions common to a given
     file architecture. *)
 module type Schema = sig
+
+  type id
 
   (** [deserialize line] is the deserialized version of [line]. *)
   val deserialize : string -> string list
@@ -44,9 +47,15 @@ module type Schema = sig
       Requires: [filename] adheres to the specified [Schema]. *)
   val add : string -> string -> bool
 
-  (** [modify filename start_id mod_line] is [true] if the file was successfully
-      modified according to [mod_file], and false otherwise. *)
-  val modify : string -> int -> (string -> int -> out_channel -> unit) -> bool
+  (** [delete filename id] is true if the line with corresponding [id] was
+      successfully deleted, and false otherwise.
+      Requires: [filename] adheres to the specified [Schema]. *)
+  val delete : string -> id -> bool
+
+  (** [update filename id change] is true if the line with [id] was updated
+      with [change], and false otherwise.
+      Requires: [filename] adheres to the specified [Schema]. *)
+  val update : string -> id -> (string -> string) -> bool
 end
 
 (** A [Cluster] stores data entries in a plaintext file as part of a
@@ -96,7 +105,6 @@ module type Cluster = sig
   (** [delete id] removes the entry with id matching [id]. *)
   val delete : id -> bool
 
-
   (** [add data] writes the given data to an entry in the cluster. Data is
       presented as a ordered list of fields corresponding to the entry type. *)
   val add : string list -> bool
@@ -110,5 +118,5 @@ end
     on file architecture. *)
 module type MakeCluster =
   functor (E : EntryType) ->
-  functor (S : Schema) ->
+  functor (S : Schema with type id = E.id) ->
     Cluster with module Entry = E and module Sch = S
