@@ -7,3 +7,4 @@
 #load "task.cmo";;
 #load "user.cmo";;
 #load "taskCluster.cmo";;
+#load "str.cma";;
