@@ -1,37 +1,5 @@
 open Cluster
-
-module Task : EntryType with type id = int = struct
-  type id = int
-  (* Might get rid of the field type as a requirement for EntryType. Idk. *)
-  type field =
-      ID of id
-    | Assignee of string
-    | Title of string
-    | Status of string
-    | Description of string
-  type t = {id: int; assignee: string; title: string; status: string; description: string}
-
-  let create_entry = function
-    | id::assignee::title::status::description -> 
-      {id = int_of_string id; assignee = assignee; title = title; 
-       status = status; 
-       description =
-         if List.length description = 1 && List.hd description = ""  then "" else
-           let temp_descr = List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
-           String.sub temp_descr 1 ((String.length temp_descr) - 1)}
-    | _ -> failwith "mistake with the reading"
-
-  let update_field field t =
-    match field with
-    | ID id -> {t with id=id}
-    | Assignee name -> {t with assignee=name}
-    | Title title -> {t with title=title}
-    | Status status -> {t with status=status}
-    | Description desc -> {t with description=desc}
-
-  let string_of_entry t =
-    [string_of_int t.id; t.assignee; t.title; t.status; "\"" ^ t.description ^ "\""]
-end
+open Task
 
 (** TODO: replace with a regex checker *)
 let string_contains str1 str2= 
@@ -44,9 +12,7 @@ let string_contains str1 str2=
 
 (** [NumIDSchema] is the common file architecture for files
     containing numerical IDs. *)
-module NumIDSchema : Schema with type id = int = struct
-
-  type id = int
+module NumIDSchema : Schema = struct
 
   let deserialize line =
     String.split_on_char ';' line
@@ -105,7 +71,7 @@ module NumIDSchema : Schema with type id = int = struct
     with Sys_error e -> false
 
   let add filename data = 
-    let new_id = string_of_int (total_lines filename) in
+    let new_id = string_of_int (1 + total_lines filename) in
     let temp_file = filename ^ ".temp" in
     let ic = open_in filename in
     let oc = open_out temp_file in
@@ -149,12 +115,10 @@ end
 
 module TaskCluster : MakeCluster = 
   functor (E : EntryType) -> 
-  functor (S : Schema with type id = E.id) -> struct
+  functor (S : Schema) -> struct
 
     module Entry = E
     module Sch = S
-    type id = Entry.id
-    type field = Entry.field
     type entry = Entry.t
 
     exception NotFound of string
@@ -162,7 +126,7 @@ module TaskCluster : MakeCluster =
     (* TODO: parametrize cluster by team! *)
     let filename = "issues.txt"
 
-    let rep_ok = failwith "Unimplemented"
+    (* let rep_ok = failwith "Unimplemented" *)
 
     let form_list (l : string list) : entry list =
       List.map Sch.deserialize l
@@ -183,7 +147,7 @@ module TaskCluster : MakeCluster =
       Sch.deserialize line
       |> Entry.create_entry
       |> Entry.update_field field
-      |> Entry.string_of_entry
+      |> Entry.to_list
       |> Sch.serialize
 
     let update id field = Sch.update filename id (new_line_task field)

@@ -1,26 +1,10 @@
 (** A module that matches [EntryType] is suitable for use as the type of entry
     in a [Cluster]. *)
 module type EntryType = sig
-  type id
-  (* [field] will be a variant with all the fields, likely starting with Id of
-     [id] or something, and [t] will structure them in a variant. *)
-  type field
   type t
   val create_entry : string list -> t
-  (* Creating an entry is really only used to de-serialize data,
-     either to return in a search or to edit. But when de-serializing data,
-     we leave this to the cluster to check the string. Why? I don't know.
-     either we do it here or there. Doing it here is not really in the spirit
-     of this module type though. However, we will need some help from this
-     module for validating input, so think about how to do that. *)
-  val update_field : field -> t -> t
-  val string_of_entry : t -> string list
-  (* This is a highly useful operation, but it might depend on
-      Cluster-specific logic, like unique field and line delimiters. We can save
-      that for the Cluster implementation, which would simply involve
-      combining a string list by a certain character and capping with newline.
-      Regardless, we should save newlines for Cluster; the field delimiter
-      is a valid tossup. *)
+  val update_field : Field.t -> t -> t
+  val to_list : t -> string list
 end
 
 (* Schema will probably be the same for all of our files, but should allow us
@@ -28,8 +12,6 @@ end
 (** A [Schema] provides information and functions common to a given
     file architecture. *)
 module type Schema = sig
-
-  type id
 
   (** [deserialize line] is the deserialized version of [line]. *)
   val deserialize : string -> string list
@@ -50,12 +32,12 @@ module type Schema = sig
   (** [delete filename id] is true if the line with corresponding [id] was
       successfully deleted, and false otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val delete : string -> id -> bool
+  val delete : string -> int -> bool
 
   (** [update filename id change] is true if the line with [id] was updated
       with [change], and false otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val update : string -> id -> (string -> string) -> bool
+  val update : string -> int -> (string -> string) -> bool
 end
 
 (** A [Cluster] stores data entries in a plaintext file as part of a
@@ -70,15 +52,6 @@ module type Cluster = sig
       important to database operations. *)
   module Sch : Schema
 
-  (** [id] is the type of identifiers of entries in the cluster. *)
-  type id = Entry.id
-
-  (** [field] is the type of entry field. *)
-  type field = Entry.field
-
-  (** [entry] is the type of entry in the cluster. *)
-  type entry = Entry.t
-
   (** Raised when nothing was found in a search. *)
   exception NotFound of string
 
@@ -88,7 +61,7 @@ module type Cluster = sig
   (** [search criterion] is a list containing all entries that contain the
       search criterion.
       Raises [NotFound criterion] if nothing matches [criterion]. *)
-  val search : string -> entry list
+  val search : string -> Entry.t list
   (* Searching in the file should not be case sensitive, and as an added
      challenge, we can turn a blind eye to on incorrect character. This is
      easiest to approach with regex. *)
@@ -103,20 +76,20 @@ module type Cluster = sig
      we're unsure about." *)
 
   (** [delete id] removes the entry with id matching [id]. *)
-  val delete : id -> bool
+  val delete : int -> bool
 
   (** [add data] writes the given data to an entry in the cluster. Data is
       presented as a ordered list of fields corresponding to the entry type. *)
   val add : string list -> bool
 
   (** [update id change] edits the entry with id [id] with [change]. *)
-  val update : id -> field -> bool
+  val update : int -> Field.t -> bool
 end
 
-(** A [MakeCluster] is a functor that makes a [Cluster] out of
+(** [MakeCluster] is a functor that makes a [Cluster] out of
     a module representing the data entry type, and a module with information
     on file architecture. *)
 module type MakeCluster =
   functor (E : EntryType) ->
-  functor (S : Schema with type id = E.id) ->
+  functor (S : Schema) ->
     Cluster with module Entry = E and module Sch = S
