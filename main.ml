@@ -22,13 +22,14 @@ let validate_input input i_type =
   else if i_type = Password && length < 8 then false 
   else if String.contains new_input ' ' then false 
   else if i_type = Username && 
-          (Str.string_match (Str.regexp "[^a-zA-Z0-9]*") 
-             new_input 0) = true then false 
+          (Str.string_match (Str.regexp "^[a-zA-Z0-9]+$") 
+             new_input 0) = false then false 
   else if i_type = Password && (String.contains new_input '\\') = true 
   then false 
   else true 
 
-(* regexp to exclude special chars: "^[\\[\\$\\^\\.\\*\\+\\?]*" *)
+(* regexp to exclude special chars: "^[\\[\\$\\^\\.\\*\\+\\?]+$" ... for some
+   reason it stopped liking the * after the last bracket ????? *)
 
 (* validate_print takes in an input ([validation]) and then checks it as a 
    valid input. if false, it matches it with its type (user or password).
@@ -41,27 +42,43 @@ let validate_print validation i_type =
   \nNo spaces or special characters, and be sure the length is between 4 and 20 characters.") 
     else (false, "Your password is invalid. Please be sure you adhere to the following: 
   \nNo spaces, no backslashes, and be sure that the length is greater than 8 characters.")
-  | true -> (true, "success")
+  | true -> (true, "")
+
+let validate_print2 validation i_type = 
+  let result = validate_input validation i_type in 
+  match result with
+  | false -> if i_type = Username then begin 
+      print_endline "Your username is invalid. Please be sure you adhere to the following: 
+  No spaces or special characters, and be sure the length is between 4 and 20 characters.";
+      false end 
+    else begin print_endline "Your password is invalid. Please be sure you adhere to the following: 
+  No spaces, no backslashes, and be sure that the length is greater than 8 characters."; false  end
+  | true -> true
 
 (* if a user enters a username that already exists, direct them to enter a new one. 
    w non-existing username, create new session w create_session *)
 let new_pass user = 
-  print_endline "Please enter a password for your new account";
+  print_endline "Please enter a password for your new account \n";
+  print_string  "> ";
   match read_line () with 
   | exception End_of_file -> failwith "oops"
   | pass -> "use create_session here"
 
 let rec new_user x =
   print_endline "Please enter a username for your new account, no spaces or 
-  special characters.";
-  match read_line () with 
-  | exception End_of_file -> failwith "lol"
-  | user -> 
-    match User.log_in user with 
-    | exception Database.NotFound user -> new_pass user
-    | string -> 
-      print_endline "user already taken -- need to implement"; 
-      new_user string
+  special characters. \n";
+  print_string  "> ";
+  let input = read_line () in 
+  let validation = validate_print2 input Username in 
+  if validation = false then new_user "restart" else 
+    match input with 
+    | exception End_of_file -> ()
+    | user -> 
+      match User.log_in user with 
+      | exception Database.NotFound user -> print_endline "success"(*new_pass user*)
+      | string -> 
+        print_endline "user already taken -- need to implement"; 
+        new_user "not done"
 
 (* takes in username, returns password if user exists, otherwise error msg *)
 let check_user user =
@@ -70,12 +87,13 @@ let check_user user =
     or create a new user."
 
 let rec password_verify pass =
-  print_endline "Please enter your password.\n";
+  print_endline "Please enter your password, or enter 0 to quit. \n";
   print_string  "> ";
   match read_line () with 
   | exception End_of_file -> failwith "uhh"
   | input_pass -> 
-    if input_pass = pass then print_endline "success" 
+    if input_pass = pass then print_endline "success" (* need to create session here *)
+    else if int_of_string input_pass = 0 then Stdlib.exit 0
     else begin print_endline 
         "Your password does not match your inputted username. Please try again.\n";
       password_verify pass
@@ -85,6 +103,7 @@ let rec password_verify pass =
    and have columns based on name,type,finished?,description etc.? *)
 (* put all functions inside this one - call check_user user |> pass_verify *)
 (* use this as the "run" function basically in main () *)
+
 let get_tasks user : unit = 
   failwith "not done"
 
@@ -93,8 +112,8 @@ let pp_cell fmt cell = Format.fprintf fmt "%s" cell
 
 (* create array matrix with tasks, make a row with titles
    id, assignee, title, descr, status *)
-let create_table = 
-  failwith "to do"
+(* let create_table = 
+   failwith "to do" *)
 
 (* need to add data verification for given input *)
 (* can't split up these strings ... but they go over the char limit :( *)
@@ -103,7 +122,8 @@ let main () =
                   "──────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
-  ANSITerminal.(print_string [green] "                    Welcome to TASKIO");
+  ANSITerminal.(print_string [yellow] "                    Welcome to ");
+  ANSITerminal.(print_string [green] "TASKIO");
   ANSITerminal.(print_string [magenta] "                        |\n");
   ANSITerminal.(print_string [magenta]
                   "                              └─────────────────────────────────────────────────────────────┘\n" );
@@ -111,7 +131,7 @@ let main () =
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
-  | "create" -> () (*new_user "create"*)
+  | "create" -> new_user "create"
   | username -> (*get_tasks*) (check_user username |> password_verify)
 
 
