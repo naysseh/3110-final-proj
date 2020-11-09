@@ -8,7 +8,7 @@ type user_access =
   | Engineer
   | Scrummer
 
-type user = {tasks : task list; team : team; 
+type user = {tasks : task list; teams : team list; 
              role : user_access}
 (********Types********)
 
@@ -26,11 +26,14 @@ let manager_task_write assignee task_data (team : team) =
 (********General Helpers********)
 
 let create_session username = 
-  failwith ""
+  let tasks = List.filter (fun x -> x.assignee = username) 
+      (Database.search_tasks username) in
+  let team_match = List.filter (fun x -> List.mem username x.members) (Database.search_teams username) in
+  {tasks = tasks; teams = team_match; role = Engineer}
 
 let add_task_data task_data user assignee = 
   match user.role with
-  | Manager -> manager_task_write assignee task_data user.team
+  (*| Manager -> manager_task_write assignee task_data user.teams*)
   | Engineer -> failwith ""
   | Scrummer -> failwith ""
 
