@@ -33,18 +33,9 @@ let validate_input input i_type =
 
 (* validate_print takes in an input ([validation]) and then checks it as a 
    valid input. if false, it matches it with its type (user or password).
-   It returns a record containing t/f and a message.  *)
-let validate_print validation i_type = 
-  let result = validate_input validation i_type in 
-  match result with
-  | false -> if i_type = Username then 
-      (false, "Your username is invalid. Please be sure you adhere to the following: 
-  \nNo spaces or special characters, and be sure the length is between 4 and 20 characters.") 
-    else (false, "Your password is invalid. Please be sure you adhere to the following: 
-  \nNo spaces, no backslashes, and be sure that the length is greater than 8 characters.")
-  | true -> (true, "")
+   It returns a bool t/f and prints a message.  *)
 
-let validate_print2 validation i_type = 
+let validate_print validation i_type = 
   let result = validate_input validation i_type in 
   match result with
   | false -> if i_type = Username then begin 
@@ -52,30 +43,34 @@ let validate_print2 validation i_type =
   No spaces or special characters, and be sure the length is between 4 and 20 characters.";
       false end 
     else begin print_endline "Your password is invalid. Please be sure you adhere to the following: 
-  No spaces, no backslashes, and be sure that the length is greater than 8 characters."; false  end
+  No spaces, no backslashes, and be sure that the length is greater than 8 characters."; 
+      false end
   | true -> true
 
 (* if a user enters a username that already exists, direct them to enter a new one. 
    w non-existing username, create new session w create_session *)
-let new_pass user = 
+let rec new_pass user = 
   print_endline "Please enter a password for your new account \n";
   print_string  "> ";
-  match read_line () with 
-  | exception End_of_file -> failwith "oops"
-  | pass -> "use create_session here"
+  let input = read_line () in 
+  let validation = validate_print input Password in 
+  if validation = false then new_pass user else 
+    match input with 
+    | exception End_of_file -> failwith "oops"
+    | pass -> print_endline "create new user needs to be implemented - success"
 
 let rec new_user x =
   print_endline "Please enter a username for your new account, no spaces or 
   special characters. \n";
   print_string  "> ";
   let input = read_line () in 
-  let validation = validate_print2 input Username in 
+  let validation = validate_print input Username in 
   if validation = false then new_user "restart" else 
     match input with 
     | exception End_of_file -> ()
     | user -> 
       match User.log_in user with 
-      | exception Database.NotFound user -> print_endline "success"(*new_pass user*)
+      | exception Database.NotFound user -> new_pass user
       | string -> 
         print_endline "user already taken -- need to implement"; 
         new_user "not done"
