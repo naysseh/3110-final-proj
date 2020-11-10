@@ -1,7 +1,5 @@
 (* NOTES: to do
-   - figure out a way to include functions in the validate_print, so that 
-     it can either succeed/re-call the function ... or just create pre-validation
-     every time user/pass verification is needed when inputting a string ... *)
+   - make printing nicer!! for tasks >:(  ... *)
 
 type input_type = 
   | Password
@@ -14,7 +12,6 @@ type input_type =
 (* username must be between 4 and 20 chars, password no smaller than 8 chars. 
    Usernames cannot contain special characters, but passwords can 
    (except backslash). *)
-
 let validate_input input i_type = 
   let new_input = String.trim input in 
   let length = String.length new_input in 
@@ -27,14 +24,12 @@ let validate_input input i_type =
   else if i_type = Password && (String.contains new_input '\\') = true 
   then false 
   else true 
-
 (* regexp to exclude special chars: "^[\\[\\$\\^\\.\\*\\+\\?]+$" ... for some
    reason it stopped liking the * after the last bracket ????? *)
 
 (* validate_print takes in an input ([validation]) and then checks it as a 
-   valid input. if false, it matches it with its type (user or password).
-   It returns a bool t/f and prints a message.  *)
-
+    valid input. if false, it matches it with its type (user or password).
+    It returns a bool t/f and prints a message.  *)
 let validate_print validation i_type = 
   let result = validate_input validation i_type in 
   match result with
@@ -57,7 +52,7 @@ let rec new_pass user =
   if validation = false then new_pass user else 
     match input with 
     | exception End_of_file -> failwith "oops"
-    | pass -> print_endline "create new user needs to be implemented - success"
+    | pass -> print_endline "create new user" (*User.create_session user*)
 
 let rec new_user x =
   print_endline "Please enter a username for your new account, no spaces or 
@@ -67,7 +62,7 @@ let rec new_user x =
   let validation = validate_print input Username in 
   if validation = false then new_user "restart" else 
     match input with 
-    | exception End_of_file -> ()
+    | exception End_of_file -> Stdlib.exit 0
     | user -> 
       match User.log_in user with 
       | exception Database.NotFound user -> new_pass user
@@ -81,29 +76,44 @@ let check_user user =
     Database.NotFound user -> "Your username does not exist. Please enter again
     or create a new user."
 
-let rec password_verify pass =
+let rec password_verify user pass =
   print_endline "Please enter your password, or enter 0 to quit. \n";
   print_string  "> ";
   match read_line () with 
   | exception End_of_file -> failwith "uhh"
   | input_pass -> 
-    if input_pass = pass then print_endline "success" (* need to create session here *)
-    else if int_of_string input_pass = 0 then Stdlib.exit 0
+    if input_pass = pass then 
+      begin 
+        print_string ("\n");
+        ANSITerminal.(print_string [green] "TASKS: ");
+        print_string ("\n"); 
+        User.create_session user end 
+    else if input_pass = "0" then Stdlib.exit 0
     else begin print_endline 
         "Your password does not match your inputted username. Please try again.\n";
-      password_verify pass
+      password_verify user pass
     end
 
-(* use this to get a list of tasks... print in table using pretty printing 
-   and have columns based on name,type,finished?,description etc.? *)
-(* put all functions inside this one - call check_user user |> pass_verify *)
-(* use this as the "run" function basically in main () *)
+(* let pp_string_list = Fmt.list Fmt.string 
 
-let get_tasks user : unit = 
-  failwith "not done"
+   let string_list lst = Format.printf "%a" pp_string_list lst *)
 
+let string_of_tasks (user : User.user) = 
+  let rec tasks_rec (tasks : Database.task list) = 
+    match tasks with 
+    | [] -> ()
+    | h :: t -> 
+      begin 
+        print_endline (h.title ^ ": " ^ h.status ^ " --> " ^
+                       h.description);
+        tasks_rec t 
+      end in tasks_rec user.tasks
 
-let pp_cell fmt cell = Format.fprintf fmt "%s" cell
+let get_tasks user = 
+  let user_type = check_user user |> password_verify user in 
+  string_of_tasks user_type
+
+(* let pp_cell fmt cell = Format.fprintf fmt "%s" cell *)
 
 (* create array matrix with tasks, make a row with titles
    id, assignee, title, descr, status *)
@@ -127,7 +137,7 @@ let main () =
   match read_line () with
   | exception End_of_file -> ()
   | "create" -> new_user "create"
-  | username -> (*get_tasks*) (check_user username |> password_verify)
+  | username -> get_tasks username
 
 
 let () = main ()
