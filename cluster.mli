@@ -66,15 +66,6 @@ module type Cluster = sig
      challenge, we can turn a blind eye to on incorrect character. This is
      easiest to approach with regex. *)
 
-  (* The next three functions need to return something other than unit. First of
-     all, the file operations from Pervasives will raise Sys_error if they fuck
-     up, so gotta be prepared for that. But this is the only possible error I can
-     think of, unless somehow we're successful in adding the data but the
-     representation invariant is broken? Then we would need an informative return
-     type. But if we're just indicating success or failure, a boolean is fine for
-     saying, "We altered the database" or "Nothing was changed due to something
-     we're unsure about." *)
-
   (** [delete id] removes the entry with id matching [id]. *)
   val delete : int -> bool
 
@@ -82,6 +73,7 @@ module type Cluster = sig
       presented as a ordered list of fields corresponding to the entry type. *)
   val add : string list -> bool
 
+  (* Note: THIS DOESN'T WORK FOR NON-NUMERICAL Schema *)
   (** [update id change] edits the entry with id [id] with [change]. *)
   val update : int -> Field.t -> bool
 end
@@ -93,3 +85,6 @@ module type MakeCluster =
   functor (E : EntryType) ->
   functor (S : Schema) ->
     Cluster with module Entry = E and module Sch = S
+
+module NumIDSchema : Schema
+module NoIDSchema : Schema

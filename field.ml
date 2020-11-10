@@ -1,8 +1,10 @@
 type t =
   [
     | `ID of int
-    | `Assignee of string
+    | `User of string
     | `Title of string
     | `Status of string
     | `Description of string
+    | `TeamName of string
+    | `Members of string
   ]
