@@ -9,4 +9,18 @@ as the file containing tasks.
 To test interactively, use the command "make" to launch utop. To use the current,
 under development, database functions use Database.xxx
 
-To run the test suite run make test
+(OPAM - depending on if i can make the tables, they MAY need to do 
+"opam install fmt" in terminal. this depends how far i get rn - natasha)
+
+In order to run the UI, please launch utop using "make" and then run 
+#use "main.ml". Once there, a test user you may use is with the login "Natasha"
+and password "passwordlol". This will allow you to see how a user's (Natasha's) 
+tasks are printed. 
+The usernames and passwords are currently stored in "login_details.txt" but 
+the only one connected to a user in the "issues.txt" file is "Natasha". 
+
+You may also test out creating a user by typing "create" instead 
+of "Natasha" when first running main, but this is not yet implemented and will
+just verify if the username and password you've entered are legal.
+
+To run the test suite run make test.
