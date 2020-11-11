@@ -128,7 +128,7 @@ let main () =
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
-  ANSITerminal.(print_string [green] "TASKIO");
+  ANSITerminal.(print_string [green] "TRAKIO");
   ANSITerminal.(print_string [magenta] "                        |\n");
   ANSITerminal.(print_string [magenta]
                   "                              └─────────────────────────────────────────────────────────────┘\n" );
