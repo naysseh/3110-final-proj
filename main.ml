@@ -52,7 +52,7 @@ let rec new_pass user =
   if validation = false then new_pass user else 
     match input with 
     | exception End_of_file -> failwith "oops"
-    | pass -> print_endline "create new user" (*User.create_session user*)
+    | pass -> print_endline "create new user not implemented" 
 
 let rec new_user x =
   print_endline "Please enter a username for your new account, no spaces or 

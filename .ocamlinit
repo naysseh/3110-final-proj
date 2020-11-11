@@ -1,5 +1,7 @@
 #require "ounit2";;
 #require "ANSITerminal";;
+#require "fmt";;
+#require "str";;
 #directory "_build";;
 #load "database.cmo";;
 #load "field.cmo";;
@@ -7,4 +9,3 @@
 #load "types.cmo";;
 #load "user.cmo";;
 #load "makeCluster.cmo";;
-#load "str.cma";;
