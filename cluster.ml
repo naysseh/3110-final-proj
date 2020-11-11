@@ -1,30 +1,32 @@
 module type EntryType = sig
   type t
+  val assoc_file : string
   val create_entry : string list -> t
   val update_field : Field.t -> t -> t
-  val to_list : t -> string list
+  val to_string_list : t -> string list
+  val to_field_list : t -> Field.t list
 end
 
 module type Schema = sig
   val deserialize : string -> string list
   val serialize : string list -> string
-  val search : string -> string -> string list option
+  val search : string -> (string -> bool) -> string list option
   val add : string -> string -> bool
   val delete : string -> int -> bool
-  val update : string -> int -> (string -> string) -> bool
+  val update : string -> (string -> string) -> bool
 end
 
 module type Cluster = sig
   module Entry : EntryType
   module Sch : Schema
 
-  exception NotFound of string
-
-  val filename : string
-  val search : string -> Entry.t list
+  val filename : string ref
+  val bind : string -> unit
+  val unbind : unit -> unit
+  val search : (Field.t -> bool) -> Entry.t list
   val delete : int -> bool
   val add : string list -> bool
-  val update : int -> Field.t -> bool
+  val update : (Field.t -> bool) -> Field.t -> bool
 end
 
 module type MakeCluster =
@@ -55,7 +57,7 @@ module NumIDSchema : Schema = struct
     let channel = open_in filename in
     let rec parse_line chnl acc= 
       try let x = input_line chnl in
-        if string_contains x criterion then parse_line chnl (x :: acc) 
+        if criterion x then parse_line chnl (x :: acc) 
         else parse_line chnl acc
       with End_of_file -> acc in
     let results = parse_line channel [] in
@@ -99,7 +101,7 @@ module NumIDSchema : Schema = struct
           Sys.rename temp filename
         end in
     try process (total_lines filename); true
-    with Sys_error e -> false
+    with Sys_error e -> close_in ic; close_out oc; Sys.remove temp; false
 
   let add filename data = 
     let new_id = string_of_int (1 + total_lines filename) in
@@ -120,7 +122,7 @@ module NumIDSchema : Schema = struct
           Sys.rename temp_file filename
         end in
     try add_line (); true
-    with Sys_error e -> false
+    with Sys_error e -> close_in ic; close_out oc; Sys.remove temp_file; false
 
   let delete filename id =
     let incl line i oc =
@@ -134,11 +136,10 @@ module NumIDSchema : Schema = struct
         end
     in modify filename incl
 
-  let update filename id change =
+  let update filename change =
     let edit line i oc =
       begin
-        let out_line = if i <> id then line else (change line)
-        in output_string oc out_line;
+        output_string oc (change line);
         if i > 1 then output_char oc '\n'
       end
     in modify filename edit
@@ -155,7 +156,7 @@ module NoIDSchema : Schema = struct
     let channel = open_in filename in
     let rec parse_line chnl acc= 
       try let x = input_line chnl in
-        if string_contains x criterion then parse_line chnl (x :: acc) 
+        if criterion x then parse_line chnl (x :: acc) 
         else parse_line chnl acc
       with End_of_file -> acc in
     let results = parse_line channel [] in
@@ -214,13 +215,12 @@ module NoIDSchema : Schema = struct
         end
     in modify filename incl
 
-  let update filename id change =
+  let update filename change =
     let edit line i oc =
       begin
-        let out_line = if i <> id then line else (change line)
-        in output_string oc out_line;
-        (* This is a problem below!!!! *)
-        output_char oc '\n'
+        output_string oc (change line);
+        (* This is a problem below!! *)
+        if i > 1 then output_char oc '\n'
       end
     in modify filename edit
 end

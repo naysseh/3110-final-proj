@@ -2,9 +2,11 @@
     in a [Cluster]. *)
 module type EntryType = sig
   type t
+  val assoc_file : string
   val create_entry : string list -> t
   val update_field : Field.t -> t -> t
-  val to_list : t -> string list
+  val to_string_list : t -> string list
+  val to_field_list : t -> Field.t list
 end
 
 (* Schema will probably be the same for all of our files, but should allow us
@@ -19,10 +21,10 @@ module type Schema = sig
   (** [serialize data] is the serialized version of [data]. *)
   val serialize : string list -> string
 
-  (** [search filename criterion] is a [search_result] with entries,
-      if any, sharing a substring matching [criterion].
+  (** [search filename criteria] is the result of a search on [filename] with 
+      entries, if any, satisfying the [criteria] function.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val search : string -> string -> string list option
+  val search : string -> (string -> bool) -> string list option
 
   (** [add filename line] is true if [line] was successfully added to
       [filename], and false otherwise.
@@ -34,10 +36,10 @@ module type Schema = sig
       Requires: [filename] adheres to the specified [Schema]. *)
   val delete : string -> int -> bool
 
-  (** [update filename id change] is true if the line with [id] was updated
-      with [change], and false otherwise.
+  (** [update filename change] is true if line(s) were altered according to 
+      [change], and false otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val update : string -> int -> (string -> string) -> bool
+  val update : string -> (string -> string) -> bool
 end
 
 (** A [Cluster] stores data entries in a plaintext file as part of a
@@ -52,16 +54,17 @@ module type Cluster = sig
       important to database operations. *)
   module Sch : Schema
 
-  (** Raised when nothing was found in a search. *)
-  exception NotFound of string
-
   (** [filename] is the name of the plaintext file where data is stored. *)
-  val filename : string
+  val filename : string ref
 
-  (** [search criterion] is a list containing all entries that contain the
-      search criterion.
-      Raises [NotFound criterion] if nothing matches [criterion]. *)
-  val search : string -> Entry.t list
+  (** [bind teamname] focuses the cluster on the file for [teamname]. *)
+  val bind : string -> unit
+  val unbind : unit -> unit
+
+  (** [search criterion] is a list containing all entries that match the
+      criterion, if any.
+      Raises [Not_found] if nothing matches any [criteria]. *)
+  val search : (Field.t -> bool) -> Entry.t list
   (* Searching in the file should not be case sensitive, and as an added
      challenge, we can turn a blind eye to on incorrect character. This is
      easiest to approach with regex. *)
@@ -74,8 +77,9 @@ module type Cluster = sig
   val add : string list -> bool
 
   (* Note: THIS DOESN'T WORK FOR NON-NUMERICAL Schema *)
-  (** [update id change] edits the entry with id [id] with [change]. *)
-  val update : int -> Field.t -> bool
+  (** [update criterion change] edits the entry(ies) matching [criterion] with
+      [change]. *)
+  val update : (Field.t -> bool) -> Field.t -> bool
 end
 
 (** [MakeCluster] is a functor that makes a [Cluster] out of

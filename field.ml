@@ -6,5 +6,5 @@ type t =
     | `Status of string
     | `Description of string
     | `TeamName of string
-    | `Members of string
+    | `Members of string list
   ]

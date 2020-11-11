@@ -8,10 +8,11 @@ module Make : MakeCluster =
     module Sch = S
     type entry = Entry.t
 
-    exception NotFound of string
-
     (* TODO: parametrize cluster by team! *)
-    let filename = "teams.txt"
+    let filename = ref E.assoc_file
+
+    let bind teamname = filename := (teamname ^ "_" ^ E.assoc_file)
+    let unbind () = filename := E.assoc_file
 
     (* let rep_ok = failwith "Unimplemented" *)
 
@@ -20,22 +21,27 @@ module Make : MakeCluster =
       |> List.map Entry.create_entry
 
     let search criterion =
-      match Sch.search filename criterion with
+      let checker line =
+        let entry = Entry.create_entry (Sch.deserialize line) in
+        List.fold_left
+          (fun b f -> criterion f && b) true (Entry.to_field_list entry)
+      in match Sch.search !filename checker with
       | Some x -> form_list x
-      | None -> raise (NotFound criterion)
+      | None -> raise Not_found
 
     (* TODO: Check data is valid *)
-    let add data = Sch.add filename (Sch.serialize data)
+    let add data = Sch.add !filename (Sch.serialize data)
 
     let delete id =
-      Sch.delete filename id
+      Sch.delete !filename id
 
-    let new_line_task field line =
-      Sch.deserialize line
-      |> Entry.create_entry
-      |> Entry.update_field field
-      |> Entry.to_list
-      |> Sch.serialize
-
-    let update id field = Sch.update filename id (new_line_task field)
+    let update criterion field =
+      let new_line_task upd line =
+        let entry = Sch.deserialize line |> Entry.create_entry in
+        let to_change = List.fold_left
+            (fun b f -> criterion f && b) true (Entry.to_field_list entry) in
+        (if to_change then Entry.update_field upd entry else entry)
+        |> Entry.to_string_list
+        |> Sch.serialize
+      in Sch.update !filename (new_line_task field)
   end
