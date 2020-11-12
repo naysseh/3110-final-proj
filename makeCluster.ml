@@ -8,13 +8,18 @@ module Make : MakeCluster =
     module Sch = S
     type entry = Entry.t
 
-    (* TODO: parametrize cluster by team! *)
     let filename = ref E.assoc_file
 
     let bind teamname = filename := (teamname ^ "_" ^ E.assoc_file)
     let unbind () = filename := E.assoc_file
 
-    (* let rep_ok = failwith "Unimplemented" *)
+    let verify line =
+      Sch.deserialize line
+      |> Entry.create_entry
+      |> Entry.to_string_list
+      |> Sch.serialize
+
+    let rep_ok () = Sch.rep_ok ~aux:verify !filename
 
     let form_list (l : string list) : entry list =
       List.map Sch.deserialize l

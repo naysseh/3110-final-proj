@@ -21,6 +21,12 @@ module type Schema = sig
   (** [serialize data] is the serialized version of [data]. *)
   val serialize : string list -> string
 
+  (** [rep_ok ?aux filename] is whether the file corresponding to [filename]
+      adheres to the specified Schema. Since Schemas are used in conjunction
+      with other modules, an [aux] function may be provided to check further
+      line-specific conditions. *)
+  val rep_ok : ?aux:(string -> string) -> string -> bool
+
   (** [search filename criteria] is the result of a search on [filename] with 
       entries, if any, satisfying the [criteria] function.
       Requires: [filename] adheres to the specified [Schema]. *)
@@ -60,6 +66,10 @@ module type Cluster = sig
   (** [bind teamname] focuses the cluster on the file for [teamname]. *)
   val bind : string -> unit
   val unbind : unit -> unit
+
+  (* [rep_ok ()] is whether the current bound file is a valid Cluster according
+     to the Sch and Entry implementation. *)
+  val rep_ok : unit -> bool
 
   (** [search criterion] is a list containing all entries that match the
       criterion, if any.

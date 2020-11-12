@@ -10,6 +10,7 @@ end
 module type Schema = sig
   val deserialize : string -> string list
   val serialize : string list -> string
+  val rep_ok : ?aux:(string -> string) -> string -> bool
   val search : string -> (string -> bool) -> string list option
   val add : string -> string -> bool
   val delete : string -> int -> bool
@@ -23,6 +24,7 @@ module type Cluster = sig
   val filename : string ref
   val bind : string -> unit
   val unbind : unit -> unit
+  val rep_ok : unit -> bool
   val search : (Field.t -> bool) -> Entry.t list
   val delete : int -> bool
   val add : string list -> bool
@@ -66,14 +68,9 @@ module NumIDSchema : Schema = struct
     else None
 
   let get_id line =
-    let delim = String.index line ';' in
-    int_of_string (String.sub line 0 delim)
-
-  let dec_id line =
-    let delim = String.index line ';' in
-    let id = int_of_string (String.sub line 0 delim) in
-    let rest = String.sub line delim (String.length line - delim) in
-    string_of_int (id - 1) ^ rest
+    match String.index_opt line ';' with
+    | None -> int_of_string line
+    | Some delim -> int_of_string (String.sub line 0 delim)
 
   let total_lines filename = 
     let chnl = open_in filename in
@@ -82,6 +79,33 @@ module NumIDSchema : Schema = struct
     match String.split_on_char ';' top_line with
     | [] -> 0
     | id::_ -> int_of_string id
+
+  let rep_ok ?aux:(aux=fun x -> x) filename =
+    let ic = open_in filename in
+    let rec parse prev_id =
+      try let curr = aux (input_line ic) in
+        let curr_id = get_id curr in
+        match prev_id with
+        (* Just started parsing--keep going! *)
+        | None -> parse (Some curr_id)
+        (* Current id is 1 less than the previous *)
+        | Some i -> if curr_id = pred i then parse (Some curr_id) else false
+      with End_of_file -> close_in ic;
+        match prev_id with
+        (* File is empty--no complaints there! *)
+        | None -> true
+        (* Must end on one *)
+        | Some i -> if i = 1 then true else false 
+        (* Failure catches two main exceptions: aux failure, and int_of_string
+           failure (the line didn't start with an id). *)
+    in try parse None with Failure e -> false
+
+
+  let dec_id line =
+    let delim = String.index line ';' in
+    let id = int_of_string (String.sub line 0 delim) in
+    let rest = String.sub line delim (String.length line - delim) in
+    string_of_int (id - 1) ^ rest
 
   let modify
       (filename : string)
@@ -151,6 +175,8 @@ module NoIDSchema : Schema = struct
 
   let serialize data =
     String.concat ";" data
+
+  let rep_ok ?aux:(aux=fun x -> x) filename = false (* TODO *)
 
   let search filename criterion = 
     let channel = open_in filename in
