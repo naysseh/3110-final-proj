@@ -1,11 +1,6 @@
-(* NOTES: to do
-   - make printing nicer!! for tasks >:(  ... *)
-
 type input_type = 
   | Password
   | Username 
-
-(* create session is gonna return a user - look in user.ml file *)
 
 (* if true, input is permitted - false, need to enter new input *)
 (* input is the given data, i_type is the type of data - user,pass,etc. *)
@@ -24,8 +19,8 @@ let validate_input input i_type =
   else if i_type = Password && (String.contains new_input '\\') = true 
   then false 
   else true 
-(* regexp to exclude special chars: "^[\\[\\$\\^\\.\\*\\+\\?]+$" ... for some
-   reason it stopped liking the * after the last bracket ????? *)
+(* another regexp to exclude certain special chars: 
+   "^[\\[\\$\\^\\.\\*\\+\\?]+$" *)
 
 (* validate_print takes in an input ([validation]) and then checks it as a 
     valid input. if false, it matches it with its type (user or password).
@@ -42,8 +37,8 @@ let validate_print validation i_type =
       false end
   | true -> true
 
-(* if a user enters a username that already exists, direct them to enter a new one. 
-   w non-existing username, create new session w create_session *)
+(* if a user enters a username that already exists, direct them to enter a new 
+   one w non-existing username, create new user when function is implemented. *)
 let rec new_pass user = 
   print_endline "Please enter a password for your new account \n";
   print_string  "> ";
@@ -67,7 +62,7 @@ let rec new_user x =
       match User.log_in user with 
       | exception Database.NotFound user -> new_pass user
       | string -> 
-        print_endline "user already taken -- need to implement"; 
+        print_endline "user already taken -- restart"; 
         new_user "not done"
 
 (* takes in username, returns password if user exists, otherwise error msg *)
@@ -105,7 +100,7 @@ let string_of_tasks (user : User.user) =
     | h :: t -> 
       begin 
         print_endline (h.title ^ ": " ^ h.status ^ " --> " ^
-                       h.description);
+                       h.description ^ " (id: " ^ string_of_int h.id ^")");
         tasks_rec t 
       end in tasks_rec user.tasks
 
@@ -120,15 +115,13 @@ let get_tasks user =
 (* let create_table = 
    failwith "to do" *)
 
-(* need to add data verification for given input *)
-(* can't split up these strings ... but they go over the char limit :( *)
 let main () =
   ANSITerminal.(print_string [magenta] 
                   "──────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
-  ANSITerminal.(print_string [green] "TASKIO");
+  ANSITerminal.(print_string [green] "TRAKIO");
   ANSITerminal.(print_string [magenta] "                        |\n");
   ANSITerminal.(print_string [magenta]
                   "                              └─────────────────────────────────────────────────────────────┘\n" );
