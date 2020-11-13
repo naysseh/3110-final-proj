@@ -65,6 +65,8 @@ module type Cluster = sig
 
   (** [bind teamname] focuses the cluster on the file for [teamname]. *)
   val bind : string -> unit
+
+  (** [unbind ()] unbinds the cluster from the current team-specific file. *)
   val unbind : unit -> unit
 
   (* [rep_ok ()] is whether the current bound file is a valid Cluster according

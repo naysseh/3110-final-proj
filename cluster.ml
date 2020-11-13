@@ -176,7 +176,12 @@ module NoIDSchema : Schema = struct
   let serialize data =
     String.concat ";" data
 
-  let rep_ok ?aux:(aux=fun x -> x) filename = false (* TODO *)
+  let rep_ok ?aux:(aux=fun x -> x) filename =
+    let ic = open_in filename in
+    let rec parse () =
+      try ignore (aux (input_line ic)); parse ()
+      with End_of_file -> close_in ic; true
+    in try parse () with Failure e -> false
 
   let search filename criterion = 
     let channel = open_in filename in
@@ -234,19 +239,14 @@ module NoIDSchema : Schema = struct
     let incl line i oc =
       if i <> id then
         begin
-          output_string oc line;
-          (* If i is 1, then don't make a new line.
-             If i is 2, and del is 1, then don't make a new line. *)
-          if not (i = 1 || (id = 1 && i = 2)) then output_char oc '\n'
+          output_string oc line; output_char oc '\n';
         end
     in modify filename incl
 
   let update filename change =
     let edit line i oc =
       begin
-        output_string oc (change line);
-        (* This is a problem below!! *)
-        if i > 1 then output_char oc '\n'
+        output_string oc (change line); output_char oc '\n';
       end
     in modify filename edit
 end

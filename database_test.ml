@@ -61,12 +61,12 @@ let database_tests =
     search_teams_test "search for potter" "Potter" 
       [{team_name = "Gryffindor"; members = [" Potter, Hermione, Ron, Ginny"]}];
     search_teams_test "search for o" "o" 
-      [{team_name = "3110 heroes"; members = ["Andrii, Brady, Natasha"]};
-       {team_name = "best profs ever"; members = ["Clarkson, White, Gries"]};
-       {team_name = "Slytherin";
-        members = [" Voldemort, Blaze, Draco, Crabb, Goyle"]};
+      [{team_name = "3110 heroes"; members = ["Andrii";"Brady";"Natasha"]};
+       {team_name = "best profs ever"; members = ["Clarkson";"White";"Gries"]};
        {team_name = "Gryffindor";
-        members = [" Potter, Hermione, Ron, Ginny"]}];
+        members = ["Potter";"Hermione";"Ron";"Ginny"]};
+       {team_name = "Slytherin";
+        members = ["Voldemort";"Blaze";"Draco";"Crabb";"Goyle"]}];
     search_tasks_with_add_test "adding task to sleep more" "sleep" 
       ["Gries"; "Sleep"; "In development"; "just sleep"]
       [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";

@@ -189,18 +189,17 @@ let file_operation_generalization oper change field id=
 let edit_task change field id = 
   file_operation_generalization (edit_oper) change field id  *)
 
-(*
-let add_data filename data  = 
-  let new_data = list_to_string data in 
-  (* changed total task code here so it updates each time the 
+(* let add_data filename data  = 
+   let new_data = list_to_string data in 
+   (* changed total task code here so it updates each time the 
      function is called *)
-  let total_tasks = total_tasks filename in
-  let temp_file = filename ^ ".temp" in
-  let ic = open_in filename and oc = open_out temp_file in 
-  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
-  output_string oc (string_of_task new_task); 
-  output_char oc '\n';
-  let rec add_line i = 
+   let total_tasks = total_tasks filename in
+   let temp_file = filename ^ ".temp" in
+   let ic = open_in filename and oc = open_out temp_file in 
+   let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
+   output_string oc (string_of_task new_task); 
+   output_char oc '\n';
+   let rec add_line i = 
     match input_line ic with
     | line -> 
       begin
@@ -217,7 +216,7 @@ let add_data filename data  =
         Sys.remove filename;
         Sys.rename temp_file filename 
       end in 
-  add_line total_tasks*)
+   add_line total_tasks *)
 
 (*For all data types, use that*)
 let add_data_all filename data id_required = 

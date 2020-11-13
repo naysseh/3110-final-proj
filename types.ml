@@ -1,8 +1,11 @@
 open Cluster
 
-module Task : EntryType = struct
+type team = {teamname: string; members: string list}
+type task = {id: int; assignee: string; title: string; status: string; description: string}
 
-  type t = {id: int; assignee: string; title: string; status: string; description: string}
+module Task : EntryType with type t = task = struct
+
+  type t = task
 
   let assoc_file = "issues.txt"
 
@@ -32,11 +35,11 @@ module Task : EntryType = struct
     [`ID t.id; `User t.assignee; `Title t.title; `Status t.status; `Description t.description]
 end
 
-module Team : EntryType = struct
+module Team : EntryType with type t = team = struct
 
   let assoc_file = "teams.txt"
 
-  type t = {teamname: string; members: string list}
+  type t = team
 
   let create_entry = function 
     | h::t -> {teamname = h; members = t}
