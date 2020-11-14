@@ -189,6 +189,7 @@ let file_operation_generalization oper change field id=
 let edit_task change field id = 
   file_operation_generalization (edit_oper) change field id  *)
 
+(*
 let add_data filename data  = 
   let new_data = list_to_string data in 
   (* changed total task code here so it updates each time the 
@@ -216,7 +217,7 @@ let add_data filename data  =
         Sys.remove filename;
         Sys.rename temp_file filename 
       end in 
-  add_line total_tasks
+  add_line total_tasks*)
 
 (*For all data types, use that*)
 let add_data_all filename data id_required = 

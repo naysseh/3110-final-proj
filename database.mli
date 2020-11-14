@@ -38,7 +38,7 @@ val edit_task : string -> string -> int -> unit
     to the top of the file found at [filename]. [data] is given as a string 
     list, and is formatted to fit the correct task syntax found in a task file.
 *)
-val add_data : string -> string list -> unit
+(*val add_data : string -> string list -> unit*)
 
 (*   (** [add_task data] writes the given [data] into a task. The new task is added
      to the top of the task database. *)

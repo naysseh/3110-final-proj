@@ -6,9 +6,9 @@ type user_access =
 
 type user = {tasks : Database.task list; teams : Database.team list; 
              role : user_access}
-(**[log in username] is a bool string pair where the bool indicates whether 
-   the username is valid and the string indicates the password that is expected 
-   if the bool is true*)
+(**[log_in username] is a string that indicates the password that is expected 
+   if the user exists. 
+   Raises: NotFound if the user doesnt exist*)
 val log_in : string -> string
 
 val create_session : string -> user
