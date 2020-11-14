@@ -82,7 +82,13 @@ let rec password_verify user pass =
         print_string ("\n");
         ANSITerminal.(print_string [green] "TASKS: ");
         print_string ("\n"); 
-        User.create_session user end 
+        (* if the user does not exist in the database, it will return 
+           an empty user. *)
+        try User.create_session user with Database.NotFound user -> begin
+            print_endline "User not in database/empty user.";
+            {User.tasks=[]; User.teams=[]; User.role=User.Engineer}
+          end
+      end 
     else if input_pass = "0" then Stdlib.exit 0
     else begin print_endline 
         "Your password does not match your inputted username. Please try again.\n";
