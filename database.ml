@@ -189,17 +189,17 @@ let file_operation_generalization oper change field id=
 let edit_task change field id = 
   file_operation_generalization (edit_oper) change field id  *)
 
-(* let add_data filename data  = 
-   let new_data = list_to_string data in 
-   (* changed total task code here so it updates each time the 
+let add_data filename data  = 
+  let new_data = list_to_string data in 
+  (* changed total task code here so it updates each time the 
      function is called *)
-   let total_tasks = total_tasks filename in
-   let temp_file = filename ^ ".temp" in
-   let ic = open_in filename and oc = open_out temp_file in 
-   let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
-   output_string oc (string_of_task new_task); 
-   output_char oc '\n';
-   let rec add_line i = 
+  let total_tasks = total_tasks filename in
+  let temp_file = filename ^ ".temp" in
+  let ic = open_in filename and oc = open_out temp_file in 
+  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
+  output_string oc (string_of_task new_task); 
+  output_char oc '\n';
+  let rec add_line i = 
     match input_line ic with
     | line -> 
       begin
@@ -216,7 +216,7 @@ let edit_task change field id =
         Sys.remove filename;
         Sys.rename temp_file filename 
       end in 
-   add_line total_tasks *)
+  add_line total_tasks
 
 (*For all data types, use that*)
 let add_data_all filename data id_required = 
@@ -241,25 +241,6 @@ let add_data_all filename data id_required =
       end in 
   add_line 1
 
-(*
-(*Review conversion of string to task and back - redundancy and inneficient*)
-let add_task data =
-  let tot = total_tasks "" in
-  let new_task =
-    list_to_string data
-    |> (fun s -> string_of_int (tot + 1) ^ ";" ^ s)
-    |> create_task
-    |> string_of_task
-    |> (fun s -> if tot > 1 then s ^ "\n" else s) in
-  let append line i new_line oc =
-    begin
-      if i = tot then output_string oc new_line;
-      output_string oc line;
-      if i > 1 then output_char oc '\n'
-    end
-  in mod_tasks append new_task*)
-
-
 let delete_task id =
   let incl line i del oc =
     if i <> del then
@@ -271,27 +252,6 @@ let delete_task id =
         if not (i = 1 || (del = 1 && i = 2)) then output_char oc '\n'
       end
   in mod_tasks incl id
-
-(* let edit_task_data change field id = 
-   let num_tasks = total_tasks in
-   let temp_file = "issues.temp" in
-   let inp = open_in "issues.txt" and 
-    out = open_out temp_file in
-   let rec add_line i = 
-    match input_line inp with
-    | line -> begin
-        if i != id then (output_string out line;)
-        else output_string out (new_line_task line change field); output_char out '\n';
-        add_line (pred i)
-      end
-    | exception (End_of_file) -> 
-      flush out;
-      close_in inp;
-      close_out out;
-      Sys.remove "issues.txt";
-      Sys.rename temp_file "issues.txt"; in
-   add_line num_tasks *)
-
 
 let edit_task change field id =
   let edit line i (change, field, id) oc =

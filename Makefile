@@ -14,7 +14,10 @@ build:
 	$(OCAMLBUILD) $(OBJECTS)
 
 test:
-	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
+	cp issues.txt issues.init ;\
+	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential ;\
+	rm issues.txt ;\
+	mv issues.init issues.txt
 
 start: 
 	$(OCAMLBUILD) $(MAIN) && ./$(MAIN)
