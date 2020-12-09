@@ -6,5 +6,5 @@
 #load "field.cmo";;
 #load "cluster.cmo";;
 #load "types.cmo";;
-#load "user.cmo";;
 #load "makeCluster.cmo";;
+#load "user.cmo";;

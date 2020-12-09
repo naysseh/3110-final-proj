@@ -37,10 +37,10 @@ module type Schema = sig
       Requires: [filename] adheres to the specified [Schema]. *)
   val add : string -> string -> bool
 
-  (** [delete filename id] is true if the line with corresponding [id] was
-      successfully deleted, and false otherwise.
+  (** [delete filename selection] is [Ok List.length selection] if the operation
+      is successful, and [Error e] otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val delete : string -> int -> bool
+  val delete : string -> string list -> (int, string) result
 
   (** [update filename change] is true if line(s) were altered according to 
       [change], and false otherwise.
@@ -81,8 +81,10 @@ module type Cluster = sig
      challenge, we can turn a blind eye to on incorrect character. This is
      easiest to approach with regex. *)
 
-  (** [delete id] removes the entry with id matching [id]. *)
-  val delete : int -> bool
+  (** [delete criterion] is [Ok x] if [x] entries meeting [criterion] were
+      deleted, and [Error e] if an exception described in [e] was raised
+      in the process, leaving the cluster untouched. *)
+  val delete : (Field.t -> bool) -> (int, string) result
 
   (** [add data] writes the given data to an entry in the cluster. Data is
       presented as a ordered list of fields corresponding to the entry type. *)

@@ -1,6 +1,11 @@
+open MakeCluster
+
 type input_type = 
   | Password
-  | Username 
+  | Username
+
+module Tasks = MakeCluster (Types.Task) (Cluster.NumIDSchema)
+module Teams = MakeCluster (Types.Team) (Cluster.NoIDSchema)
 
 (* if true, input is permitted - false, need to enter new input *)
 (* input is the given data, i_type is the type of data - user,pass,etc. *)
@@ -100,7 +105,7 @@ let rec password_verify user pass =
    let string_list lst = Format.printf "%a" pp_string_list lst *)
 
 let string_of_tasks (user : User.user) = 
-  let rec tasks_rec (tasks : Database.task list) = 
+  let rec tasks_rec (tasks : Types.task list) = 
     match tasks with 
     | [] -> ()
     | h :: t -> 

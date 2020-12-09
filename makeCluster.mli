@@ -2,6 +2,6 @@
 
 open Cluster
 
-(** [Make] makes a [Cluster] that stores
+(** [MakeCluster] makes a [Cluster] that stores
     entries within a given file structure. *)
-module Make : MakeCluster
+module MakeCluster : MakeCluster

@@ -13,7 +13,7 @@ module type Schema = sig
   val rep_ok : ?aux:(string -> string) -> string -> bool
   val search : string -> (string -> bool) -> string list option
   val add : string -> string -> bool
-  val delete : string -> int -> bool
+  val delete : string -> string list -> (int, string) result
   val update : string -> (string -> string) -> bool
 end
 
@@ -26,7 +26,7 @@ module type Cluster = sig
   val unbind : unit -> unit
   val rep_ok : unit -> bool
   val search : (Field.t -> bool) -> Entry.t list
-  val delete : int -> bool
+  val delete : (Field.t -> bool) -> (int, string) result
   val add : string list -> bool
   val update : (Field.t -> bool) -> Field.t -> bool
 end
@@ -95,17 +95,16 @@ module NumIDSchema : Schema = struct
         (* File is empty--no complaints there! *)
         | None -> true
         (* Must end on one *)
-        | Some i -> if i = 1 then true else false 
+        | Some i -> if i = 1 then true else false
         (* Failure catches two main exceptions: aux failure, and int_of_string
            failure (the line didn't start with an id). *)
     in try parse None with Failure e -> false
 
-
-  let dec_id line =
+  let dec_id line amt =
     let delim = String.index line ';' in
     let id = int_of_string (String.sub line 0 delim) in
     let rest = String.sub line delim (String.length line - delim) in
-    string_of_int (id - 1) ^ rest
+    string_of_int (id - amt) ^ rest
 
   let modify
       (filename : string)
@@ -148,17 +147,53 @@ module NumIDSchema : Schema = struct
     try add_line (); true
     with Sys_error e -> close_in ic; close_out oc; Sys.remove temp_file; false
 
-  let delete filename id =
-    let incl line i oc =
-      if i <> id then
-        begin
-          let out_line = if i > id then dec_id line else line in
-          output_string oc out_line;
-          (* If i is 1, then don't make a new line.
-             If i is 2, and del is 1, then don't make a new line. *)
-          if not (i = 1 || (id = 1 && i = 2)) then output_char oc '\n'
-        end
-    in modify filename incl
+  let rec to_one prev = function
+    | [] -> prev = 1
+    | h::t -> let x = get_id h in x = pred prev && to_one x t
+
+  (* Worst-case: all entries are marked for deletion. 
+     Best-case: no entries are marked for deletion. 
+     Could probably be better if just took modify and passed args into process,
+     it's just so complicated with the file invariant.*)
+  (* Assume that, when delete is called, we know the ids of the tasks to be deleted.
+     But not a list of ids, the list of TASKS. Users won't be deleting by id
+     or directly modifying the database, they will be deleting selections.
+     So based on a selection, delete will decide how to delete the stuff.
+     Discuss this with Natasha and Andrii. *)
+  (* Couldn't use modify for this one. Maybe we'll get rid of modify or bring it down as a helper for update. *)
+  let delete filename selection =
+    let length = total_lines filename in
+    let num = List.length selection in
+    let ic = open_in filename in
+    let temp = filename ^ ".temp" in
+    let oc = open_out temp in
+    let rec process i selection amt =
+      (* The top of selection will always be the one to delete next. *)
+      try
+        let line = input_line ic in
+        match selection with
+        | [] ->
+          output_string oc line;
+          (if i <> 1 then output_char oc '\n');
+          process (pred i) [] 0
+        | to_del::rem as s ->
+          if line <> to_del then
+            (output_string oc (dec_id line amt);
+             (if not (i = 1 || to_one i s) then output_char oc '\n');
+             process (pred i) s amt)
+          else process (pred i) rem (pred amt)
+      with End_of_file -> () in
+    try process length selection num; 
+      flush oc;
+      close_in ic;
+      close_out oc;
+      Sys.rename temp filename;
+      Ok num
+    with Sys_error e ->
+      close_in ic;
+      close_out oc;
+      Sys.remove temp;
+      Error e
 
   let update filename change =
     let edit line i oc =
@@ -235,13 +270,13 @@ module NoIDSchema : Schema = struct
     try add_line (); true
     with Sys_error e -> false
 
-  let delete filename id =
-    let incl line i oc =
-      if i <> id then
-        begin
-          output_string oc line; output_char oc '\n';
-        end
-    in modify filename incl
+  let delete filename id = failwith ""
+  (* let incl line i oc =
+     if i <> id then
+      begin
+        output_string oc line; output_char oc '\n';
+      end
+     in modify filename incl *)
 
   let update filename change =
     let edit line i oc =

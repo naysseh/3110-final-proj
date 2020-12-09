@@ -2,6 +2,7 @@ open Cluster
 
 type team = {teamname: string; members: string list}
 type task = {id: int; assignee: string; title: string; status: string; description: string}
+type login = {username: string; password: string}
 
 module Task : EntryType with type t = task = struct
 
@@ -54,4 +55,24 @@ module Team : EntryType with type t = team = struct
   let to_string_list t = t.teamname :: t.members
 
   let to_field_list t = [`TeamName t.teamname; `Members t.members]
+end
+
+module Login : EntryType with type t = login = struct
+  let assoc_file = "login_details.txt"
+
+  type t = login
+
+  let create_entry = function 
+    | u::p::[] -> {username = u; password = p}
+    | _ -> failwith "mistake with creating a login"
+
+  let update_field field t =
+    match field with
+    | `User name -> {t with username=name}
+    | `Password pass -> {t with password=pass}
+    | _ -> t (* Field does not exist. To not update, or to raise an exception? *)
+
+  let to_string_list t = [t.username; t.password]
+
+  let to_field_list t = [`User t.username; `Password t.password]
 end
