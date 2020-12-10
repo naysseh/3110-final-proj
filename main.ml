@@ -115,9 +115,32 @@ let string_of_tasks (user : User.user) =
         tasks_rec t 
       end in tasks_rec user.tasks
 
+(* should one be able to add teams? is it just one role that has this access? *)
+let rec add_option user = 
+  print_endline "Please enter what you would like to add:";
+  print_endline "Task | Team \n";
+  match String.lowercase_ascii (read_line ()) with 
+  | "task" -> () (* need function to write tasks/teams *)
+  | "team" -> ()
+  | _ -> (print_endline "Invalid input. Please enter either \"Task\" or \"Team\" ";
+          add_option user)
+
+(* need to make it so that only certain user roles can do certain things  *)
+let rec actions user = 
+  print_endline "What action would you like to do? Please enter one of the following:";
+  print_endline "Add | Delete | Edit \n";
+  match String.lowercase_ascii (read_line ()) with 
+  | "add" -> add_option user
+  | "delete" -> () 
+  | "edit" -> ()
+  | _ -> (print_endline "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
+          actions user)
+
 let get_tasks user = 
   let user_type = check_user user |> password_verify user in 
-  string_of_tasks user_type
+  string_of_tasks user_type;
+  print_newline () ;
+  actions user 
 
 (* let pp_cell fmt cell = Format.fprintf fmt "%s" cell *)
 
