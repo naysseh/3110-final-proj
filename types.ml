@@ -46,15 +46,18 @@ module Team : EntryType with type t = team = struct
     | h::t -> {teamname = h; members = t}
     | _ -> failwith "mistake with creating a team"
 
-  let update_field field t =
+  let rec update_field field t =
     match field with
     | `TeamName name -> {t with teamname=name}
+    | `User user ->
+      if List.mem user t.members then t else {t with members=user::t.members}
     | `Members users -> {t with members=users}
     | _ -> t (* Field does not exist. To not update, or to raise an exception? *)
 
   let to_string_list t = t.teamname :: t.members
 
-  let to_field_list t = [`TeamName t.teamname; `Members t.members]
+  let to_field_list t = 
+    `TeamName t.teamname :: List.map (fun s -> `User s) t.members
 end
 
 module Login : EntryType with type t = login = struct
