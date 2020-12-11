@@ -4,9 +4,6 @@ type input_type =
   | Password
   | Username
 
-module Tasks = MakeCluster (Types.Task) (Cluster.NumIDSchema)
-module Teams = MakeCluster (Types.Team) (Cluster.NoIDSchema)
-
 (* if true, input is permitted - false, need to enter new input *)
 (* input is the given data, i_type is the type of data - user,pass,etc. *)
 (* username must be between 4 and 20 chars, password no smaller than 8 chars. 
