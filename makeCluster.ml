@@ -34,20 +34,24 @@ module MakeCluster : MakeCluster =
 
     let search criterion =
       match select criterion with
+      | None -> []
       | Some x -> form_list x
-      | None -> raise Not_found
 
     (* TODO: Check data is valid *)
     let add data = Sch.add !filename (Sch.serialize data)
 
-    (* Either you know what tasks you're gonna delete, or you have criteria.
-       But if you have criteria, then just chain a search and delete. *)
+    (* There's something easy to do for the ID-based schema: simply accept IDs
+       as they are known by the user and delete with that. No need to do a 
+       selection first. 
+       Also, we can try to assess if a lot of lines are going to be deleted by
+       some condition. If so, then we can flip that condition and do a *keep*
+       -type of operation instead of a delete (less resource-intensive). *)
     let delete criterion =
       match select criterion with
       | None -> Ok 0
       | Some l -> Sch.delete !filename (List.rev l)
 
-    let update criterion field =
+    let update field criterion =
       let new_line upd line =
         let entry = Sch.deserialize line |> Entry.create_entry in
         let to_change = List.fold_left
