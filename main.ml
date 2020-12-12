@@ -50,6 +50,7 @@ let rec new_pass user =
     match input with 
     | exception End_of_file -> failwith "oops"
     | pass -> print_endline "create new user not implemented" 
+(* print message to tell user to log in again using their new login *)
 
 let rec new_user x =
   print_endline "Please enter a username for your new account, no spaces or 
@@ -112,18 +113,66 @@ let string_of_tasks (user : User.user) =
         tasks_rec t 
       end in tasks_rec user.tasks
 
-(* who adds teams? is it just one role that has this access? like manager..  *)
+let rec team_lists_string (team_l : Types.team list) = 
+  match team_l with 
+  | [] -> ""
+  | h :: t -> String.concat ", " (Types.Team.to_string_list h) 
+              ^  "\n" ^ (team_lists_string t)
+
+
+let rec team_select (user : User.user) = 
+  print_endline "Please enter the name of the team from the list below that you would like to edit.\n";
+  print_endline (team_lists_string user.teams);
+  print_string "\n> ";
+  let team_name = User.get_team (read_line ()) in
+  try team_name with Database.NotFound team_name -> (
+      print_endline "Team name entered does not exist. Please enter a valid teamname.";
+      team_select user)
+
+(* let rec add_tasks_input user = 
+   let team = team_select user in
+   print_endline "Please enter the name of the user you would like to add a task to:\n";
+   print_string  "> ";
+   let assignee = read_line () in 
+   print_endline "Please enter the title of the task:\n";
+   print_string  "> ";
+   let title = read_line () in 
+   print_endline "Please enter the status of the task:\n";
+   print_string  "> ";
+   let status = read_line () in 
+   print_endline "Please enter the description of the task:\n";
+   print_string  "> ";
+   let description = read_line () in 
+   print_endline "Please confirm that this is the task you would like to add. 
+   Enter 1 to confirm, or 0 to re-enter. \n";
+   print_endline ("Team name: " ^ team.teamname ^ "\n");
+   print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
+                 "Status: " ^ status ^ "\n" ^ "Description: " ^ description ^ "\n");
+   print_string "> ";
+   let rec entry input = 
+    match read_line () with 
+    | "1" -> ( 
+        match User.manager_task_write assignee [title; status; description] team with 
+        | () -> print_endline "Success"
+        | exception User.User_Not_In_Team assignee -> begin 
+            print_endline "This user was not in the team listed. Please reenter.";
+            add_tasks_input user end
+      )
+    | "0" -> add_tasks_input user
+    | _ -> (print_endline "Not a valid input. Please enter either 1 or 0.";
+            entry user) 
+   in entry user *)
+
 let rec add_option user = 
   print_endline "Please enter what you would like to add:";
   print_endline "Task | Team \n";
   match String.lowercase_ascii (read_line ()) with 
-  | "task" -> () (* need function to write tasks/teams *)
+  | "task" -> () 
   | "team" -> ()
   | _ -> (print_endline "Invalid input. Please enter either \"Task\" or \"Team\" ";
           add_option user)
 
-(* need to make it so that only certain user roles can do certain things  *)
-let rec actions user = 
+let rec manager_actions user = 
   print_endline "What action would you like to do? Please enter one of the following:";
   print_endline "Add | Delete | Edit \n";
   match String.lowercase_ascii (read_line ()) with 
@@ -131,13 +180,23 @@ let rec actions user =
   | "delete" -> () 
   | "edit" -> ()
   | _ -> (print_endline "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
-          actions user)
+          manager_actions user)
+
+
+(* roles have diff actions *)
+let rec actions (user : User.user) = 
+  let role = user.role in
+  match role with 
+  | Manager -> manager_actions user
+  | Engineer -> ()
+  | Scrummer -> ()
+
 
 let get_tasks user = 
   let user_type = check_user user |> password_verify user in 
   string_of_tasks user_type;
   print_newline () ;
-  actions user 
+  actions user_type 
 
 (* let pp_cell fmt cell = Format.fprintf fmt "%s" cell *)
 
@@ -146,7 +205,7 @@ let get_tasks user =
 
 let main () =
   ANSITerminal.(print_string [magenta] 
-                  "──────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────────────────");
+                  "─────────────────────────────┬──────────────────────────────────────���───────────┬───────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
@@ -160,6 +219,5 @@ let main () =
   | exception End_of_file -> ()
   | "create" -> new_user "create"
   | username -> get_tasks username
-
 
 let () = main ()

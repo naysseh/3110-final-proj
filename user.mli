@@ -4,6 +4,8 @@ type user_access =
   | Engineer
   | Scrummer
 
+exception User_Not_In_Team of string
+
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
 (**[log_in username] is a string that indicates the password that is expected 

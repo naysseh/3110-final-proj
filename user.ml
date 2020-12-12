@@ -61,6 +61,6 @@ let log_in username =
 let get_team teamname =
   let results = by_teamname teamname |> Teams.search in
   match results with
-  | [] -> failwith "NO TEAMS w that name"
+  | [] -> raise (Database.NotFound teamname)
   | h::[] -> h
   | _ -> failwith "More than one. Choose"
