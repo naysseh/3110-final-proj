@@ -32,10 +32,10 @@ module type Schema = sig
       Requires: [filename] adheres to the specified [Schema]. *)
   val search : string -> (string -> bool) -> string list option
 
-  (** [add filename line] is true if [line] was successfully added to
-      [filename], and false otherwise.
+  (** [add filename line] is [Ok 1] if [line] was successfully added to
+      [filename], and [Error e] otherwise.
       Requires: [filename] adheres to the specified [Schema]. *)
-  val add : string -> string -> bool
+  val add : string -> string -> (int, string) result
 
   (** [delete filename selection] is [Ok List.length selection] if the operation
       is successful, and [Error e] otherwise.
@@ -75,7 +75,7 @@ module type Cluster = sig
 
   (** [search criterion] is a list containing all entries that match the
       criterion, if any.
-      Raises [Not_found] if nothing matches any [criteria]. *)
+      Raises [Not_found] if nothing matches [criterion]. *)
   val search : (Field.t -> bool) -> Entry.t list
   (* Searching in the file should not be case sensitive, and as an added
      challenge, we can turn a blind eye to on incorrect character. This is
@@ -87,13 +87,15 @@ module type Cluster = sig
   val delete : (Field.t -> bool) -> (int, string) result
 
   (** [add data] writes the given data to an entry in the cluster. Data is
-      presented as a ordered list of fields corresponding to the entry type. *)
-  val add : string list -> bool
+      presented as a ordered list of fields corresponding to the entry type.
+      Returns [Ok x] if [x] entries were added, and [Error e] if an exception
+      with message [e] was raised in the process, leaving the cluster
+      unmodified. *)
+  val add : string list -> (int, string) result
 
-  (* Note: THIS DOESN'T WORK FOR NON-NUMERICAL Schema *)
-  (** [update criterion change] edits the entry(ies) matching [criterion] with
+  (** [update change criterion] edits the entry(s) matching [criterion] with
       [change]. *)
-  val update : (Field.t -> bool) -> Field.t -> bool
+  val update : Field.t -> (Field.t -> bool) -> bool
 end
 
 (** [MakeCluster] is a functor that makes a [Cluster] out of
@@ -104,5 +106,9 @@ module type MakeCluster =
   functor (S : Schema) ->
     Cluster with module Entry = E and module Sch = S
 
+(** [NumIDSchema] is the common file architecture for files
+    containing numerical IDs. *)
 module NumIDSchema : Schema
+
+(** [NoIDSchema] is the file archictecture for files without numerical IDs. *)
 module NoIDSchema : Schema

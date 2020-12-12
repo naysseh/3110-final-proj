@@ -12,7 +12,7 @@ module type Schema = sig
   val serialize : string list -> string
   val rep_ok : ?aux:(string -> string) -> string -> bool
   val search : string -> (string -> bool) -> string list option
-  val add : string -> string -> bool
+  val add : string -> string -> (int, string) result
   val delete : string -> string list -> (int, string) result
   val update : string -> (string -> string) -> bool
 end
@@ -27,8 +27,8 @@ module type Cluster = sig
   val rep_ok : unit -> bool
   val search : (Field.t -> bool) -> Entry.t list
   val delete : (Field.t -> bool) -> (int, string) result
-  val add : string list -> bool
-  val update : (Field.t -> bool) -> Field.t -> bool
+  val add : string list -> (int, string) result
+  val update : Field.t -> (Field.t -> bool) -> bool
 end
 
 module type MakeCluster =
@@ -44,6 +44,17 @@ let string_contains str1 str2=
       if i > len1 - len2 then false else
       if (str2 = String.sub str1 i len2) then true else check (succ i) in
     check 0
+
+let wrapup_ok ic oc temp filename =
+  flush oc;
+  close_in ic;
+  close_out oc;
+  Sys.rename temp filename
+
+let wrapup_e ic oc temp =
+  close_in ic;
+  close_out oc;
+  Sys.remove temp
 
 (** [NumIDSchema] is the common file architecture for files
     containing numerical IDs. *)
@@ -106,26 +117,6 @@ module NumIDSchema : Schema = struct
     let rest = String.sub line delim (String.length line - delim) in
     string_of_int (id - amt) ^ rest
 
-  let modify
-      (filename : string)
-      (mod_line : string -> int -> out_channel -> unit) : bool =
-    let ic = open_in filename in
-    let temp = filename ^ ".temp" in
-    let oc = open_out temp in
-    let rec process i =
-      try let line = input_line ic in
-        mod_line line i oc; process (pred i)
-      with End_of_file ->
-        begin
-          flush oc;
-          close_in ic;
-          close_out oc;
-          Sys.remove filename;
-          Sys.rename temp filename
-        end in
-    try process (total_lines filename); true
-    with Sys_error e -> close_in ic; close_out oc; Sys.remove temp; false
-
   let add filename data = 
     let new_id = string_of_int (1 + total_lines filename) in
     let temp_file = filename ^ ".temp" in
@@ -136,31 +127,14 @@ module NumIDSchema : Schema = struct
       try let line = input_line ic in
         output_char oc '\n'; output_string oc line;
         add_line ()
-      with End_of_file ->
-        begin 
-          flush oc;
-          close_in ic;
-          close_out oc;
-          Sys.remove filename;
-          Sys.rename temp_file filename
-        end in
-    try add_line (); true
-    with Sys_error e -> close_in ic; close_out oc; Sys.remove temp_file; false
+      with End_of_file -> () in
+    try add_line (); wrapup_ok ic oc temp_file filename; Ok 1
+    with Sys_error e -> wrapup_e ic oc temp_file; Error e
 
   let rec to_one prev = function
     | [] -> prev = 1
     | h::t -> let x = get_id h in x = pred prev && to_one x t
 
-  (* Worst-case: all entries are marked for deletion. 
-     Best-case: no entries are marked for deletion. 
-     Could probably be better if just took modify and passed args into process,
-     it's just so complicated with the file invariant.*)
-  (* Assume that, when delete is called, we know the ids of the tasks to be deleted.
-     But not a list of ids, the list of TASKS. Users won't be deleting by id
-     or directly modifying the database, they will be deleting selections.
-     So based on a selection, delete will decide how to delete the stuff.
-     Discuss this with Natasha and Andrii. *)
-  (* Couldn't use modify for this one. Maybe we'll get rid of modify or bring it down as a helper for update. *)
   let delete filename selection =
     let length = total_lines filename in
     let num = List.length selection in
@@ -178,30 +152,28 @@ module NumIDSchema : Schema = struct
           process (pred i) [] 0
         | to_del::rem as s ->
           if line <> to_del then
-            (output_string oc (dec_id line amt);
-             (if not (i = 1 || to_one i s) then output_char oc '\n');
-             process (pred i) s amt)
+            begin
+              output_string oc (dec_id line amt);
+              (if not (i = 1 || to_one i s) then output_char oc '\n');
+              process (pred i) s amt
+            end
           else process (pred i) rem (pred amt)
       with End_of_file -> () in
-    try process length selection num; 
-      flush oc;
-      close_in ic;
-      close_out oc;
-      Sys.rename temp filename;
-      Ok num
-    with Sys_error e ->
-      close_in ic;
-      close_out oc;
-      Sys.remove temp;
-      Error e
+    try process length selection num; wrapup_ok ic oc temp filename; Ok num
+    with Sys_error e -> wrapup_e ic oc temp; Error e
 
   let update filename change =
-    let edit line i oc =
-      begin
+    let ic = open_in filename in
+    let temp = filename ^ ".temp" in
+    let oc = open_out temp in
+    let rec process i =
+      try let line = input_line ic in
         output_string oc (change line);
-        if i > 1 then output_char oc '\n'
-      end
-    in modify filename edit
+        if i > 1 then output_char oc '\n';
+        process (pred i)
+      with End_of_file -> () in
+    try process (total_lines filename); wrapup_ok ic oc temp filename; true
+    with Sys_error e -> wrapup_e ic oc temp; false
 end
 
 module NoIDSchema : Schema = struct
@@ -230,26 +202,6 @@ module NoIDSchema : Schema = struct
     if List.length results != 0 then Some results 
     else None
 
-  let modify
-      (filename : string)
-      (mod_line : string -> int -> out_channel -> unit) : bool =
-    let ic = open_in filename in
-    let temp = filename ^ ".temp" in
-    let oc = open_out temp in
-    let rec process i =
-      try let line = input_line ic in
-        mod_line line i oc; process (succ i)
-      with End_of_file ->
-        begin
-          flush oc;
-          close_in ic;
-          close_out oc;
-          Sys.remove filename;
-          Sys.rename temp filename
-        end in
-    try process 1; true
-    with Sys_error e -> false
-
   let add filename data = 
     let temp_file = filename ^ ".temp" in
     let ic = open_in filename in
@@ -259,29 +211,45 @@ module NoIDSchema : Schema = struct
       try let line = input_line ic in
         output_char oc '\n'; output_string oc line;
         add_line ()
-      with End_of_file ->
-        begin 
-          flush oc;
-          close_in ic;
-          close_out oc;
-          Sys.remove filename;
-          Sys.rename temp_file filename
-        end in
-    try add_line (); true
-    with Sys_error e -> false
+      with End_of_file -> () in
+    try add_line (); wrapup_ok ic oc temp_file filename; Ok 1
+    with Sys_error e -> wrapup_e ic oc temp_file; Error e
 
-  let delete filename id = failwith ""
-  (* let incl line i oc =
-     if i <> id then
-      begin
-        output_string oc line; output_char oc '\n';
-      end
-     in modify filename incl *)
+  let delete filename selection =
+    let num = List.length selection in
+    let ic = open_in filename in
+    let temp = filename ^ ".temp" in
+    let oc = open_out temp in
+    let rec process selection amt =
+      try
+        let line = input_line ic in
+        match selection with
+        | [] ->
+          output_string oc line;
+          output_char oc '\n';
+          process [] 0
+        | to_del::rem as s ->
+          if line <> to_del then
+            begin
+              output_string oc line;
+              output_char oc '\n';
+              process s amt
+            end
+          else process rem (pred amt)
+      with End_of_file -> () in
+    try process selection num; wrapup_ok ic oc temp filename; Ok num
+    with Sys_error e -> wrapup_e ic oc temp; Error e
 
   let update filename change =
-    let edit line i oc =
-      begin
-        output_string oc (change line); output_char oc '\n';
-      end
-    in modify filename edit
+    let ic = open_in filename in
+    let temp = filename ^ ".temp" in
+    let oc = open_out temp in
+    let rec process () =
+      try let line = input_line ic in
+        output_string oc (change line);
+        output_char oc '\n';
+        process ()
+      with End_of_file -> () in
+    try process (); wrapup_ok ic oc temp filename; true
+    with Sys_error e -> wrapup_e ic oc temp; false
 end
