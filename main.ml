@@ -60,8 +60,8 @@ let rec new_user x =
   if validation = false then new_user "restart" else 
     match input with 
     | exception End_of_file -> Stdlib.exit 0
-    | user -> 
-      match User.log_in user with 
+    | user ->
+      match User.log_in user with
       | exception Database.NotFound user -> new_pass user
       | string -> 
         print_endline "user already taken -- restart"; 
@@ -112,7 +112,7 @@ let string_of_tasks (user : User.user) =
         tasks_rec t 
       end in tasks_rec user.tasks
 
-(* should one be able to add teams? is it just one role that has this access? *)
+(* who adds teams? is it just one role that has this access? like manager..  *)
 let rec add_option user = 
   print_endline "Please enter what you would like to add:";
   print_endline "Task | Team \n";
@@ -143,8 +143,6 @@ let get_tasks user =
 
 (* create array matrix with tasks, make a row with titles
    id, assignee, title, descr, status *)
-(* let create_table = 
-   failwith "to do" *)
 
 let main () =
   ANSITerminal.(print_string [magenta] 
