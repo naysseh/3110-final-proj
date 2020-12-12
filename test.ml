@@ -95,10 +95,10 @@ let backend_tests =
     login_test "nonexisting" "nope" true "lol";
   ]
 
-module TaskCluster = MakeCluster.Make(Types.Task)(Cluster.NumIDSchema)
+module TaskCluster = MakeCluster.MakeCluster(Types.Task)(Cluster.NumIDSchema)
 
 let checker (qfunc : Field.t) : bool = 
-  if qfunc = "lol" then true else false
+  if qfunc = `User "lol" then true else false
 
 let cluster_search_tasks_test (name : string) (criteria : string) 
     (expected_output) = 

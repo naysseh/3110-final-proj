@@ -56,8 +56,7 @@ module Team : EntryType with type t = team = struct
 
   let to_string_list t = t.teamname :: t.members
 
-  let to_field_list t = 
-    `TeamName t.teamname :: List.map (fun s -> `User s) t.members
+  let to_field_list t = [`TeamName t.teamname; `Members t.members]
 end
 
 module Login : EntryType with type t = login = struct

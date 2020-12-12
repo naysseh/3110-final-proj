@@ -29,11 +29,14 @@ let manager_task_write assignee task_data (team : team) =
   else raise (User_Not_In_Team assignee)
 
 let by_user username = function | `User s -> s = username | _ -> true
+
+let contains_user username = 
+  function | `Members l -> List.mem username l | _ -> true
 (********General Helpers********)
 
 let create_session username = 
   let tasks = by_user username |> Tasks.search in
-  let team_match = by_user username |> Teams.search in
+  let team_match = contains_user username |> Teams.search in
   {tasks = tasks; teams = team_match; role = Engineer}
 
 let add_task_data task_data user assignee = 
