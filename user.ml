@@ -32,6 +32,8 @@ let by_user username = function | `User s -> s = username | _ -> true
 
 let contains_user username = 
   function | `Members l -> List.mem username l | _ -> true
+
+let by_teamname teamname = function | `TeamName s -> s = teamname | _ -> true
 (********General Helpers********)
 
 let create_session username = 
@@ -55,3 +57,10 @@ let log_in username =
   let results = by_user username |> LoginBase.search in
   match results with 
   | logins -> check_logins logins username
+
+let get_team teamname =
+  let results = by_teamname teamname |> Teams.search in
+  match results with
+  | [] -> failwith "NO TEAMS w that name"
+  | h::[] -> h
+  | _ -> failwith "More than one. Choose"
