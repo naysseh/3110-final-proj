@@ -6,9 +6,12 @@ type input_type =
 
 (* if true, input is permitted - false, need to enter new input *)
 (* input is the given data, i_type is the type of data - user,pass,etc. *)
-(* username must be between 4 and 20 chars, password no smaller than 8 chars. 
-   Usernames cannot contain special characters, but passwords can 
-   (except backslash). *)
+
+(** Validates a given [input] based on its [i_type] which is either a username or 
+    password. Restrictions include: username must be between 4 and 20 chars,
+    password no smaller than 8 chars. 
+    Usernames cannot contain special characters, but passwords can 
+    (except backslash). *)
 let validate_input input i_type = 
   let new_input = String.trim input in 
   let length = String.length new_input in 
@@ -24,9 +27,9 @@ let validate_input input i_type =
 (* another regexp to exclude certain special chars: 
    "^[\\[\\$\\^\\.\\*\\+\\?]+$" *)
 
-(* validate_print takes in an input ([validation]) and then checks it as a 
-    valid input. if false, it matches it with its type (user or password).
-    It returns a bool t/f and prints a message.  *)
+(** validate_print takes in an input [validation] and then checks it as a 
+    valid input. If false, it matches it with its [i_type] (user or password).
+    It returns a bool t/f and prints a message. *)
 let validate_print validation i_type = 
   let result = validate_input validation i_type in 
   match result with
@@ -34,13 +37,15 @@ let validate_print validation i_type =
       print_endline "Your username is invalid. Please be sure you adhere to the following: 
   No spaces or special characters, and be sure the length is between 4 and 20 characters.";
       false end 
-    else begin print_endline "Your password is invalid. Please be sure you adhere to the following: 
+    else begin 
+      print_endline "Your password is invalid. Please be sure you adhere to the following: 
   No spaces, no backslashes, and be sure that the length is greater than 8 characters."; 
       false end
   | true -> true
 
-(* if a user enters a username that already exists, direct them to enter a new 
-   one w non-existing username, create new user when function is implemented. *)
+(** Function to take in password for new account with name [user].
+    If a user enters a username that already exists, direct them to enter a new 
+    one w non-existing username. Create new user. *)
 let rec new_pass user = 
   print_endline "Please enter a password for your new account \n";
   print_string  "> ";
@@ -68,12 +73,15 @@ let rec new_user x =
         print_endline "user already taken -- restart"; 
         new_user "not done"
 
-(* takes in username, returns password if user exists, otherwise error msg *)
+(** Takes in username [user], returns password if user exists. *)
 let check_user user =
   try User.log_in user with  
     Database.NotFound user -> "Your username does not exist. Please enter again
     or create a new user."
 
+(** password_verify takes in a [user] and [pass] and verifies that the 
+    inputted password matches the username in the login base. Prompts the user 
+    to re-enter if the password does not match the username. *)
 let rec password_verify user pass =
   print_endline "Please enter your password, or enter 0 to quit. \n";
   print_string  "> ";
@@ -89,8 +97,7 @@ let rec password_verify user pass =
            an empty user. *)
         try User.create_session user with Database.NotFound user -> begin
             print_endline "User not in database/empty user.";
-            {User.tasks=[]; User.teams=[]; User.role=User.Engineer}
-          end
+            {User.tasks=[]; User.teams=[]; User.role=User.Engineer} end
       end 
     else if input_pass = "0" then Stdlib.exit 0
     else begin print_endline 
@@ -183,13 +190,12 @@ let rec manager_actions user =
   | "add" -> add_option user
   | "delete" -> () 
   | "edit" -> ()
-  | _ -> (print_endline 
-            "Invalid input. 
-            Please enter either \"Add\", \"Delete\", or \"Edit\""; 
-          manager_actions user)
+  | _ -> 
+    (print_endline 
+       "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
+     manager_actions user)
 
-
-(* roles have diff actions *)
+(** Offer a user the actions that come with their role. *)
 let rec actions (user : User.user) = 
   let role = user.role in
   match role with 
@@ -211,7 +217,8 @@ let get_tasks user =
 
 let main () =
   ANSITerminal.(print_string [magenta] 
-                  "─────────────────────────────┬───────────────────���──────────────────────────────────────────┬──────────────────────────────────────────────────────────");
+
+                  "─────────────────────────────────┬────────────────────────────────────────────────────────────────────────┬─────────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
