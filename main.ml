@@ -121,12 +121,14 @@ let rec team_lists_string (team_l : Types.team list) =
 
 
 let rec team_select (user : User.user) = 
-  print_endline "Please enter the name of the team from the list below that you would like to edit.\n";
+  print_endline 
+    "Please enter the name of the team from the list below that you would like to edit.\n";
   print_endline (team_lists_string user.teams);
   print_string "\n> ";
   let team_name = User.get_team (read_line ()) in
   try team_name with Database.NotFound team_name -> (
-      print_endline "Team name entered does not exist. Please enter a valid teamname.";
+      print_endline 
+        "Team name entered does not exist. Please enter a valid teamname.";
       team_select user)
 
 (* let rec add_tasks_input user = 
@@ -169,17 +171,21 @@ let rec add_option user =
   match String.lowercase_ascii (read_line ()) with 
   | "task" -> () 
   | "team" -> ()
-  | _ -> (print_endline "Invalid input. Please enter either \"Task\" or \"Team\" ";
+  | _ -> (print_endline 
+            "Invalid input. Please enter either \"Task\" or \"Team\" ";
           add_option user)
 
 let rec manager_actions user = 
-  print_endline "What action would you like to do? Please enter one of the following:";
+  print_endline 
+    "What action would you like to do? Please enter one of the following:";
   print_endline "Add | Delete | Edit \n";
   match String.lowercase_ascii (read_line ()) with 
   | "add" -> add_option user
   | "delete" -> () 
   | "edit" -> ()
-  | _ -> (print_endline "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
+  | _ -> (print_endline 
+            "Invalid input. 
+            Please enter either \"Add\", \"Delete\", or \"Edit\""; 
           manager_actions user)
 
 
@@ -205,7 +211,7 @@ let get_tasks user =
 
 let main () =
   ANSITerminal.(print_string [magenta] 
-                  "─────────────────────────────┬──────────────────────────────────────���───────────┬───────────────────────────");
+                  "─────────────────────────────┬───────────────────���──────────────────────────────────────────┬──────────────────────────────────────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
