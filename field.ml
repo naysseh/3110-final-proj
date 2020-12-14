@@ -1,3 +1,8 @@
+type user_access = 
+  | Manager
+  | Engineer
+  | Scrummer
+
 type t =
   [
     | `ID of int
@@ -7,13 +12,22 @@ type t =
     | `Description of string
     | `TeamName of string
 
-    | `Managers of string list
-    | `Engineers of string list
-    | `Scrummers of string list
+    | `Member of string * user_access
 
     | `Entry of t list
     | `Password of string
   ]
+
+let user_access_of_string = function
+  | "Manager" -> Manager
+  | "Scrummer" -> Scrummer
+  | "Engineer" -> Engineer
+  | _ -> failwith "issue assigning a role"
+
+let string_of_user_access = function
+  | Manager -> "Manager"
+  | Scrummer -> "Scrummer"
+  | Engineer -> "Engineer"
 
 let rec equal a b =
   match a, b with
@@ -24,9 +38,7 @@ let rec equal a b =
   | `Description a, `Description b -> a = b
   | `TeamName a, `TeamName b -> a = b
 
-  | `Managers a, `Managers b 
-  | `Engineers a, `Engineers b
-  | `Scrummers a, `Scrummers b -> List.sort compare a = List.sort compare b
+  | `Member (a, b), `Member (c, d) -> a = c && b = d
 
   | `Entry a, `Entry b ->
     (try List.for_all2 equal a b with Invalid_argument _ -> false)

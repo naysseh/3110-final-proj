@@ -1,9 +1,7 @@
 open Cluster
+open Field
 
-type team = {teamname: string; 
-             managers: string list; 
-             engineers: string list; 
-             scrummers: string list}
+type team = {teamname: string; members: (string * user_access) list}
 type task = {id: int; 
              assignee: string; 
              title: string; 

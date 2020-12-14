@@ -1,9 +1,8 @@
 open Cluster
+open Field
 
 type team = {teamname: string; 
-             managers: string list; 
-             engineers: string list; 
-             scrummers: string list}
+             members: (string * user_access) list}
 type task = {id: int; 
              assignee: string; 
              title: string; 
@@ -49,28 +48,27 @@ module Team : EntryType with type t = team = struct
 
   type t = team
 
+  let make_user string =
+    match (String.split_on_char ' ') string with
+    | role::username::[] -> username, user_access_of_string role
+    | _ -> failwith "mistake with creating a team"
+
+  let inv_make_user (s, role) = string_of_user_access role ^ " " ^ s
+
   let create_entry = function 
-    | s::[r1;r2;r3] -> {teamname = s; 
-                        managers = String.split_on_char ',' r1;
-                        engineers = String.split_on_char ',' r2;
-                        scrummers = String.split_on_char ',' r3}
+    | h::t -> {teamname = h; members = List.map make_user t}
     | _ -> failwith "mistake with creating a team"
 
   let rec update_field field t =
     match field with
     | `TeamName name -> {t with teamname=name}
-    | `Managers l -> {t with managers=l}
-    | `Engineers l -> {t with engineers=l}
-    | `Scrummers l -> {t with scrummers=l}
+    | `Member m -> {t with members = m :: t.members}
     | _ -> t (* Field does not exist. To not update, or to raise an exception? *)
 
-  let to_string_list t = 
-    t.teamname :: List.flatten [t.managers; t.engineers; t.scrummers]
+  let to_string_list t = t.teamname :: List.map inv_make_user t.members
 
-  let to_field_list t = [`TeamName t.teamname; 
-                         `Managers t.managers; 
-                         `Engineers t.engineers; 
-                         `Scrummers t.scrummers]
+  let to_field_list t =
+    `TeamName t.teamname :: List.map (fun e -> `Member e) t.members
 end
 
 module Login : EntryType with type t = login = struct

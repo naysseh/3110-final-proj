@@ -1,5 +1,3 @@
-open MakeCluster
-
 type input_type = 
   | Password
   | Username
@@ -97,7 +95,7 @@ let rec password_verify user pass =
            an empty user. *)
         try User.create_session user with Database.NotFound user -> begin
             print_endline "User not in database/empty user.";
-            {User.tasks=[]; User.teams=[]; User.role=User.Engineer} end
+            {User.tasks=[]; User.teams=[]; User.role=Field.Engineer} end
       end 
     else if input_pass = "0" then Stdlib.exit 0
     else begin print_endline 
