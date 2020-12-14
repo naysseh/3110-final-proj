@@ -1,10 +1,11 @@
 (*Implementation of all frontend to database operations on a user*)
 open Database
 open MakeCluster
+open Cluster
 
-module Teams = MakeCluster (Types.Team) (Cluster.NoIDSchema)
-module Tasks = MakeCluster (Types.Task) (Cluster.NumIDSchema)
-module LoginBase = MakeCluster (Types.Login) (Cluster.NoIDSchema)
+module Teams = MakeCluster (Types.Team) (NoIDSchema)
+module Tasks = MakeCluster (Types.Task) (NumIDSchema)
+module LoginBase = MakeCluster (Types.Login) (NoIDSchema)
 
 (********Types********)
 type user_access = 
@@ -28,12 +29,18 @@ let manager_task_write assignee task_data (team : team) =
     add_data_all (team.team_name ^ "_issues.txt") task_to_write true
   else raise (User_Not_In_Team assignee)
 
-let by_user username = function | `User s -> s = username | _ -> true
+let by_user username = 
+  Strict, function | `User s -> s = username | _ -> true
 
 let contains_user username = 
-  function | `Members l -> List.mem username l | _ -> true
+  Sloppy, function 
+    | `Managers l 
+    | `Engineers l 
+    | `Scrummers l -> List.mem username l 
+    | _ -> true
 
-let by_teamname teamname = function | `TeamName s -> s = teamname | _ -> true
+let by_teamname teamname = 
+  Strict, function | `TeamName s -> s = teamname | _ -> true
 (********General Helpers********)
 
 let create_session username = 

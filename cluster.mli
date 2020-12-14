@@ -48,6 +48,13 @@ module type Schema = sig
   val update : string -> (string -> string) -> bool
 end
 
+(** A [select_context] tells the Cluster how it should apply a selection
+      criterion when searching, deleting, or updating. There are two modes:
+      sloppy and strict. Both check the criterion against each column,
+      except sloppy mode will select an entry if at least one column matches
+      the criterion, whereas in strict mode, every column must match. *)
+type select_context = Sloppy | Strict
+
 (** A [Cluster] stores data entries in a plaintext file as part of a
     decentralized database. *)
 module type Cluster = sig
@@ -73,18 +80,19 @@ module type Cluster = sig
      to the Sch and Entry implementation. *)
   val rep_ok : unit -> bool
 
-  (** [search criterion] is a list containing all entries that match the
-      criterion, if any.
+  (** [search (ctxt, criterion)] is a list containing all entries that match the
+      criterion, if any. [ctxt] determines how the criterion is applied.
       Raises [Not_found] if nothing matches [criterion]. *)
-  val search : (Field.t -> bool) -> Entry.t list
+  val search : select_context * (Field.t -> bool) -> Entry.t list
   (* Searching in the file should not be case sensitive, and as an added
      challenge, we can turn a blind eye to on incorrect character. This is
      easiest to approach with regex. *)
 
-  (** [delete criterion] is [Ok x] if [x] entries meeting [criterion] were
-      deleted, and [Error e] if an exception described in [e] was raised
-      in the process, leaving the cluster untouched. *)
-  val delete : (Field.t -> bool) -> (int, string) result
+  (** [delete (ctxt, criterion)] is [Ok x] if [x] entries meeting [criterion] 
+      were deleted, and [Error e] if an exception described in [e] was raised
+      in the process, leaving the cluster untouched.
+      [ctxt] determines how the criterion is applied. *)
+  val delete : select_context * (Field.t -> bool) -> (int, string) result
 
   (** [add data] writes the given data to an entry in the cluster. Data is
       presented as a ordered list of fields corresponding to the entry type.
@@ -93,9 +101,9 @@ module type Cluster = sig
       unmodified. *)
   val add : string list -> (int, string) result
 
-  (** [update change criterion] edits the entry(s) matching [criterion] with
-      [change]. *)
-  val update : Field.t -> (Field.t -> bool) -> bool
+  (** [update change (ctxt * criterion)] edits the entry(s) matching [criterion]
+      with [change]. [ctxt] determines how the criterion is applied.*)
+  val update : Field.t -> select_context * (Field.t -> bool) -> bool
 end
 
 (** [MakeCluster] is a functor that makes a [Cluster] out of

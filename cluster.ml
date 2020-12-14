@@ -17,6 +17,8 @@ module type Schema = sig
   val update : string -> (string -> string) -> bool
 end
 
+type select_context = Sloppy | Strict
+
 module type Cluster = sig
   module Entry : EntryType
   module Sch : Schema
@@ -25,10 +27,10 @@ module type Cluster = sig
   val bind : string -> unit
   val unbind : unit -> unit
   val rep_ok : unit -> bool
-  val search : (Field.t -> bool) -> Entry.t list
-  val delete : (Field.t -> bool) -> (int, string) result
+  val search : select_context * (Field.t -> bool) -> Entry.t list
+  val delete : select_context * (Field.t -> bool) -> (int, string) result
   val add : string list -> (int, string) result
-  val update : Field.t -> (Field.t -> bool) -> bool
+  val update : Field.t -> select_context * (Field.t -> bool) -> bool
 end
 
 module type MakeCluster =

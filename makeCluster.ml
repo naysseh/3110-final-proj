@@ -25,15 +25,19 @@ module MakeCluster : MakeCluster =
       List.map Sch.deserialize l
       |> List.map Entry.create_entry
 
-    let select criterion =
+    let check (ctxt, criterion) entry =
+      Entry.to_field_list entry
+      |> match ctxt with
+      | Sloppy -> List.exists criterion
+      | Strict -> List.for_all criterion
+
+    let select ctxt_criterion =
       let checker line =
-        let entry = Entry.create_entry (Sch.deserialize line) in
-        List.fold_left
-          (fun b f -> criterion f && b) true (Entry.to_field_list entry)
+        check ctxt_criterion (Entry.create_entry (Sch.deserialize line))
       in Sch.search !filename checker
 
-    let search criterion =
-      match select criterion with
+    let search ctxt_criterion =
+      match select ctxt_criterion with
       | None -> []
       | Some x -> form_list x
 
@@ -46,18 +50,19 @@ module MakeCluster : MakeCluster =
        Also, we can try to assess if a lot of lines are going to be deleted by
        some condition. If so, then we can flip that condition and do a *keep*
        -type of operation instead of a delete (less resource-intensive). *)
-    let delete criterion =
-      match select criterion with
+    let delete ctxt_criterion =
+      match select ctxt_criterion with
       | None -> Ok 0
       | Some l -> Sch.delete !filename (List.rev l)
 
-    let update field criterion =
+    let update field ctxt_criterion =
       let new_line upd line =
-        let entry = Sch.deserialize line |> Entry.create_entry in
-        let to_change = List.fold_left
-            (fun b f -> criterion f && b) true (Entry.to_field_list entry) in
-        (if to_change then Entry.update_field upd entry else entry)
-        |> Entry.to_string_list
-        |> Sch.serialize
+        let modify entry = 
+          if check ctxt_criterion entry 
+          then Entry.update_field upd entry
+          else entry
+        in modify (Entry.create_entry (Sch.deserialize line))
+           |> Entry.to_string_list
+           |> Sch.serialize
       in Sch.update !filename (new_line field)
   end

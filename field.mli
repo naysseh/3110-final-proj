@@ -6,7 +6,9 @@ type t =
     | `Status of string
     | `Description of string
     | `TeamName of string
-    | `Members of string list
+    | `Managers of string list
+    | `Engineers of string list
+    | `Scrummers of string list
     | `Entry of t list
     | `Password of string
   ]
