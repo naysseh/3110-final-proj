@@ -23,15 +23,13 @@ exception Database_Fatal_Error of string
 (********Exceptions********)
 
 (********General Helpers********)
-let manager_task_write assignee task_data (team : team) = 
-  if List.mem assignee team.members then 
-    let task_to_write = 
-      assignee :: task_data in
-    match Tasks.add task_to_write with
-    | Ok i -> i = 1
-    | Error s -> raise (Database_Fatal_Error s)
-    (*add_data_all (team.team_name ^ "_issues.txt") task_to_write true*)
-  else raise (User_Not_In_Team assignee)
+let manager_task_write assignee task_data  =
+  let task_to_write = 
+    assignee :: task_data in
+  match Tasks.add task_to_write with
+  | Ok i -> i = 1
+  | Error s -> raise (Database_Fatal_Error s)
+
 
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true
