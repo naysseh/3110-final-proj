@@ -19,6 +19,7 @@ type user = {tasks : Types.task list; teams : Types.team list;
 
 (********Exceptions********)
 exception User_Not_In_Team of string
+exception Database_Fatal_Error of string
 (********Exceptions********)
 
 (********General Helpers********)
@@ -26,7 +27,10 @@ let manager_task_write assignee task_data (team : team) =
   if List.mem assignee team.members then 
     let task_to_write = 
       assignee :: task_data in
-    add_data_all (team.team_name ^ "_issues.txt") task_to_write true
+    match Tasks.add task_to_write with
+    | Ok i -> i = 1
+    | Error s -> raise (Database_Fatal_Error s)
+    (*add_data_all (team.team_name ^ "_issues.txt") task_to_write true*)
   else raise (User_Not_In_Team assignee)
 
 let by_user username = 
