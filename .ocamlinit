@@ -1,5 +1,6 @@
 #require "ounit2";;
 #require "ANSITerminal";;
+#require "str";;
 #directory "_build";;
 #load "database.cmo";;
 #load "field.cmo";;

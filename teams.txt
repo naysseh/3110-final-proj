@@ -1,4 +1,4 @@
 3110 heroes;Andrii;Brady;Natasha
 best profs ever;Clarkson;White;Gries
-Gryffindor;Potter;Hermione;Ron;Ginny
-Slytherin;Voldemort;Blaze;Draco;Crabb;Goyle
+Gryffindor;Potter;Hermione;Ron,Ginny
+Slytherin;Salazar;Voldemort;Blaze,Draco,Crabb,Goyle

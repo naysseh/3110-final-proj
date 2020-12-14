@@ -123,8 +123,8 @@ let string_of_tasks (user : User.user) =
 let rec team_lists_string (team_l : Types.team list) = 
   match team_l with 
   | [] -> ""
-  | h :: t -> String.concat ", " (Types.Team.to_string_list h) 
-              ^  "\n" ^ (team_lists_string t)
+  | h :: t -> String.concat ", " 
+                (Types.Team.to_string_list h) ^  "\n" ^ (team_lists_string t)
 
 
 let rec team_select (user : User.user) = 
@@ -200,7 +200,7 @@ let rec actions (user : User.user) =
   let role = user.role in
   match role with 
   | Manager -> manager_actions user
-  | Engineer -> ()
+  | Engineer -> manager_actions user
   | Scrummer -> ()
 
 
