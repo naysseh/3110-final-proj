@@ -47,13 +47,16 @@ let manager_task_write assignee task_data team tasks =
 let manager_task_remove id tasks =
   let remover (task : Types.task) = 
     task.id != id in 
-  match Tasks.delete (Strict, function | `ID i -> i = id | _ -> false) with
+  match Tasks.delete (Strict, function | `ID i -> i = id | _ -> true) with
   | Ok i -> if i = 1 then List.filter remover tasks else tasks
   | Error s -> raise (Database_Fatal_Error s)
 
-let manager_task_edit field new_val tasks = 
-  let field = Types.make_str_field field new_val in
-  Tasks.update field (Strict, function | field -> ) (*???????????*)
+let manager_task_edit field new_val tasks =
+  let to_update = List.map (fun (t : Types.task) -> t.id) tasks in
+  let field = Field.make_str_field field new_val in
+  Tasks.update field 
+    (Sloppy, function | `ID id -> List.mem id to_update
+                      | _ -> false)
 
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true
