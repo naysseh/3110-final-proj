@@ -52,7 +52,8 @@ let manager_task_remove id tasks =
   | Error s -> raise (Database_Fatal_Error s)
 
 let manager_task_edit field new_val tasks = 
-  failwith ""
+  let field = Types.make_str_field field new_val in
+  Tasks.update field (Strict, function | field -> ) (*???????????*)
 
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true

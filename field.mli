@@ -25,3 +25,7 @@ val string_of_user_access : user_access -> string
 
 (** [equal a b] is the monomorphic equality of two field types. *)
 val equal : t -> t -> bool
+
+(**[make_str_field inp val] is the field type corresponding to inp 
+   with a value val.*)
+val make_str_field : string -> string -> t

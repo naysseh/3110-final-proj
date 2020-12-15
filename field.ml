@@ -43,3 +43,15 @@ let rec equal a b =
   | `Entry a, `Entry b ->
     (try List.for_all2 equal a b with Invalid_argument _ -> false)
   | _ -> false
+
+let make_str_field str (v : string) : t = 
+  match str with
+  | "title" -> `Title v
+  | "Title" -> `Title v
+  | "status" -> `Status v
+  | "Status" -> `Status v
+  | "description" -> `Description v
+  | "Description" -> `Description v
+  | "assignee" -> `User v
+  | "Assignee" -> `User v
+  | _ -> failwith ""
