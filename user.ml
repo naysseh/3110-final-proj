@@ -21,15 +21,35 @@ exception Database_Fatal_Error of string
 let user_in_team username (team : Types.team) = 
   List.fold_left (fun b (name, _) -> b || (name = username)) false team.members
 
-let manager_task_write assignee task_data team =
+let append_task data tasks = 
+  let id = 1 + List.fold_left (fun max_id (task : Types.task) -> 
+      if task.id > max_id then task.id else max_id) 0 tasks in
+  let sorter (t1 : Types.task) (t2 : Types.task) = 
+    if t1.id > t2.id then 1 else
+    if t1.id = t2.id then 0 else -1 in
+  let (task : Types.task) = match data with
+    | assignee :: title :: status :: description :: _ -> 
+      {id = id; assignee = assignee; title = title;
+       status = status; description = description} 
+    | _ -> failwith "" in
+  List.sort sorter (task :: tasks)
+
+(**add change of tasks list*)
+let manager_task_write assignee task_data team tasks =
   if user_in_team assignee team then
     let task_to_write = 
       assignee :: task_data in
     match Tasks.add task_to_write with
-    | Ok i -> i = 1
+    | Ok i -> append_task task_data tasks
     | Error s -> raise (Database_Fatal_Error s)
   else raise (User_Not_In_Team assignee)
 
+let manager_task_remove id tasks =
+  let remover (task : Types.task) = 
+    task.id != id in 
+  match Tasks.delete (Strict, function | `ID i -> i = id | _ -> false) with
+  | Ok i -> if i = 1 then List.filter remover tasks else tasks
+  | Error s -> raise (Database_Fatal_Error s)
 
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true

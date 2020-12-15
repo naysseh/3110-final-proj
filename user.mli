@@ -11,13 +11,20 @@ val log_in : string -> string
 
 val create_session : string -> user
 
-(**[manager_task_write username data team] writes data into the file and 
-   associates it to the user username. Returns bool to verify that the correct
-   Database function was used. If true everything is correct, otherwise 
-   something went  wrong. 
+(**[manager_task_write username data team tasks] writes data into the file and 
+   associates it to the user username. Returns the new task list containing the
+   added task to verify that the correct Database function was used. 
    Requires: data is of a correct format corresponding to the team.
    Raises: Database_Fatal_Error code if some database error has occured. code 
    indicates the error.*)
-val manager_task_write : string -> string list -> Types.team -> bool
+val manager_task_write : string -> string list -> Types.team -> 
+  Types.task list -> Types.task list
+
+(**[manager_task_remove id tasks] is the task list with task with ID id removed.
+   The corresponding task is also removed from the task file. If no task with ID
+   id is present than the task list is unmodified. 
+   Raises: Database_Fatal_Error code if some database error has occured. code 
+   indicates the error.*)
+val manager_task_remove : int -> Types.task list -> Types.task list
 
 val get_team : string -> Types.team
