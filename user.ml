@@ -7,6 +7,33 @@ module Teams = MakeCluster (Types.Team) (NoIDSchema)
 module Tasks = MakeCluster (Types.Task) (NumIDSchema)
 module LoginBase = MakeCluster (Types.Login) (NoIDSchema)
 
+(********RB Tree for Tasks********)
+type key = string
+type value = Types.task
+type color = 
+  | Red
+  | Black
+
+type t = 
+  | Leaf
+  | Node of (color * t * (key * value) * t)
+
+let empty = Leaf
+
+let is_empty = function
+  | Leaf -> true
+  | _ -> false
+
+let size d = 
+  let rec count_nodes_in_each d size = 
+    match d with
+    | Node (_, l, _, r) -> count_nodes_in_each l size + 1 
+                           + count_nodes_in_each r size
+    | Leaf -> size in
+  count_nodes_in_each d 0 
+
+(********RB Tree for Tasks********)
+
 (********Types********)
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
@@ -47,15 +74,15 @@ let manager_task_write assignee task_data team tasks =
 let manager_task_remove id tasks =
   let remover (task : Types.task) = 
     task.id != id in 
-  match Tasks.delete (Strict, function | `ID i -> i = id | _ -> true) with
+  match Tasks.delete (Sloppy, function | `ID i -> i = id | _ -> false) with
   | Ok i -> if i = 1 then List.filter remover tasks else tasks
   | Error s -> raise (Database_Fatal_Error s)
 
-let manager_task_edit field new_val tasks =
+let manager_task_edit id field new_val tasks =
   let to_update = List.map (fun (t : Types.task) -> t.id) tasks in
   let field = Field.make_str_field field new_val in
   Tasks.update field 
-    (Sloppy, function | `ID id -> List.mem id to_update
+    (Sloppy, function | `ID i -> i = id
                       | _ -> false)
 
 let by_user username = 
