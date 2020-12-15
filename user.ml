@@ -51,6 +51,9 @@ let manager_task_remove id tasks =
   | Ok i -> if i = 1 then List.filter remover tasks else tasks
   | Error s -> raise (Database_Fatal_Error s)
 
+let manager_task_edit field new_val tasks = 
+  failwith ""
+
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true
 
