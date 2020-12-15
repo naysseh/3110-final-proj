@@ -18,12 +18,17 @@ exception Database_Fatal_Error of string
 (********Exceptions********)
 
 (********General Helpers********)
-let manager_task_write assignee task_data  =
-  let task_to_write = 
-    assignee :: task_data in
-  match Tasks.add task_to_write with
-  | Ok i -> i = 1
-  | Error s -> raise (Database_Fatal_Error s)
+let user_in_team username (team : Types.team) = 
+  List.fold_left (fun b (name, _) -> b || (name = username)) false team.members
+
+let manager_task_write assignee task_data team =
+  if user_in_team assignee team then
+    let task_to_write = 
+      assignee :: task_data in
+    match Tasks.add task_to_write with
+    | Ok i -> i = 1
+    | Error s -> raise (Database_Fatal_Error s)
+  else raise (User_Not_In_Team assignee)
 
 
 let by_user username = 
@@ -52,7 +57,7 @@ let create_session username =
 
 let add_task_data task_data user assignee = 
   match user.role with
-  (*| Manager -> manager_task_write assignee task_data user.teams*)
+  | Manager -> failwith ""
   | Engineer -> failwith ""
   | Scrummer -> failwith ""
 

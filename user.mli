@@ -18,6 +18,6 @@ val create_session : string -> user
    Requires: data is of a correct format corresponding to the team.
    Raises: Database_Fatal_Error code if some database error has occured. code 
    indicates the error.*)
-val manager_task_write : string -> string list (*-> Database.team*) -> bool
+val manager_task_write : string -> string list -> Types.team -> bool
 
 val get_team : string -> Types.team
