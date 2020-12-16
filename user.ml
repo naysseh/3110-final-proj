@@ -32,6 +32,8 @@ let size d =
     | Leaf -> size in
   count_nodes_in_each d 0 
 
+
+
 (********RB Tree for Tasks********)
 
 (********Types********)
@@ -79,11 +81,21 @@ let manager_task_remove id tasks =
   | Error s -> raise (Database_Fatal_Error s)
 
 let manager_task_edit id field new_val tasks =
-  let to_update = List.map (fun (t : Types.task) -> t.id) tasks in
-  let field = Field.make_str_field field new_val in
-  Tasks.update field 
-    (Sloppy, function | `ID i -> i = id
-                      | _ -> false)
+  let edit_task id field nv (tasks : Types.task list) = 
+    List.map (fun (task : Types.task) -> if task.id = id then 
+                 match field with
+                 | "assignee" -> {task with assignee = nv}
+                 | "title" -> {task with title = nv}
+                 | "status" -> {task with status = nv}
+                 | "description" -> {task with description = nv}
+                 | _ -> failwith "" 
+               else task) tasks in
+  let fieldt = Field.make_str_field field new_val in
+  match Tasks.update fieldt 
+          (Sloppy, function | `ID i -> i = id
+                            | _ -> false) with
+  | true -> edit_task id field new_val tasks
+  | false -> raise (Database_Fatal_Error "Database error")
 
 let by_user username = 
   Strict, function | `User s -> s = username | _ -> true

@@ -27,4 +27,8 @@ val manager_task_write : string -> string list -> Types.team ->
    indicates the error.*)
 val manager_task_remove : int -> Types.task list -> Types.task list
 
+(**[manager_task_edit id field value tasks] *)
+val manager_task_edit : int -> string -> string 
+  -> Types.task list -> Types.task list
+
 val get_team : string -> Types.team
