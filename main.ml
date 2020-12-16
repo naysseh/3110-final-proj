@@ -136,31 +136,31 @@ let rec team_select (user : User.user) =
         "Team name entered does not exist. Please enter a valid teamname.";
       team_select user)
 
-(* let rec add_tasks_input user = 
-   let team = team_select user in
-   print_endline "Please enter the name of the user you would like to add a task to:\n";
-   print_string  "> ";
-   let assignee = read_line () in 
-   print_endline "Please enter the title of the task:\n";
-   print_string  "> ";
-   let title = read_line () in 
-   print_endline "Please enter the status of the task:\n";
-   print_string  "> ";
-   let status = read_line () in 
-   print_endline "Please enter the description of the task:\n";
-   print_string  "> ";
-   let description = read_line () in 
-   print_endline "Please confirm that this is the task you would like to add. 
+let rec add_tasks_input user = 
+  let team = team_select user in
+  print_endline "Please enter the name of the user you would like to add a task to:\n";
+  print_string  "> ";
+  let assignee = read_line () in 
+  print_endline "Please enter the title of the task:\n";
+  print_string  "> ";
+  let title = read_line () in 
+  print_endline "Please enter the status of the task:\n";
+  print_string  "> ";
+  let status = read_line () in 
+  print_endline "Please enter the description of the task:\n";
+  print_string  "> ";
+  let description = read_line () in 
+  print_endline "Please confirm that this is the task you would like to add. 
    Enter 1 to confirm, or 0 to re-enter. \n";
-   print_endline ("Team name: " ^ team.teamname ^ "\n");
-   print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
+  print_endline ("Team name: " ^ team.teamname ^ "\n");
+  print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
                  "Status: " ^ status ^ "\n" ^ "Description: " ^ description ^ "\n");
-   print_string "> ";
-   let rec entry input = 
+  print_string "> ";
+  let rec entry input = 
     match read_line () with 
     | "1" -> ( 
-        match User.manager_task_write assignee [title; status; description] team with 
-        | () -> print_endline "Success"
+        match User.manager_task_write assignee [title; status; description] team user.tasks with 
+        | t_list -> print_endline "Success"
         | exception User.User_Not_In_Team assignee -> begin 
             print_endline "This user was not in the team listed. Please reenter.";
             add_tasks_input user end
@@ -168,13 +168,13 @@ let rec team_select (user : User.user) =
     | "0" -> add_tasks_input user
     | _ -> (print_endline "Not a valid input. Please enter either 1 or 0.";
             entry user) 
-   in entry user *)
+  in entry user
 
 let rec add_option user = 
   print_endline "Please enter what you would like to add:";
   print_endline "Task | Team \n";
   match String.lowercase_ascii (read_line ()) with 
-  | "task" -> () 
+  | "task" -> add_tasks_input user 
   | "team" -> ()
   | _ -> (print_endline 
             "Invalid input. Please enter either \"Task\" or \"Team\" ";
@@ -198,7 +198,7 @@ let rec actions (user : User.user) =
   let role = user.role in
   match role with 
   | Manager -> manager_actions user
-  | Engineer -> manager_actions user
+  | Engineer -> ()
   | Scrummer -> ()
 
 
