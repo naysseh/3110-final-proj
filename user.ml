@@ -53,6 +53,8 @@ let get_team_tasks (team : Types.team) =
                 function | `User name -> List.mem name team_members
                          | _ -> false)
 
+let get_task_by_id (tasks : Types.task list) id = 
+  List.find (fun (task : Types.task) -> task.id = id) tasks
 
 let user_in_team username (team : Types.team) = 
   List.fold_left (fun b (name, _) -> b || (name = username)) false team.members

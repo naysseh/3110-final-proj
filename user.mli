@@ -35,4 +35,8 @@ val manager_task_edit : int -> string -> string
    the team.*)
 val get_team_tasks : Types.team -> Types.task list
 
+(**[get_task_by_id tasks id] is the task with id id in tasks
+   Raises: Not_Found if no task with id id exists in the list.*)
+val get_task_by_id : Types.task list -> int -> Types.task
+
 val get_team : string -> Types.team
