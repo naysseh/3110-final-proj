@@ -47,6 +47,13 @@ exception Database_Fatal_Error of string
 (********Exceptions********)
 
 (********General Helpers********)
+let get_team_tasks (team : Types.team) = 
+  let team_members = List.map (fun (user, role) -> user) team.members in
+  Tasks.search (Sloppy, 
+                function | `User name -> List.mem name team_members
+                         | _ -> false)
+
+
 let user_in_team username (team : Types.team) = 
   List.fold_left (fun b (name, _) -> b || (name = username)) false team.members
 

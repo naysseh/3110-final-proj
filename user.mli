@@ -31,4 +31,8 @@ val manager_task_remove : int -> Types.task list -> Types.task list
 val manager_task_edit : int -> string -> string 
   -> Types.task list -> Types.task list
 
+(**[get_team_tasks team] is the list of tasks associated with all the members of 
+   the team.*)
+val get_team_tasks : Types.team -> Types.task list
+
 val get_team : string -> Types.team
