@@ -2,6 +2,10 @@ type input_type =
   | Password
   | Username
 
+type task_output = 
+  | View
+  | Print_All
+
 (** [validate_input input i_type] validates a given [input] based on its 
     [i_type] which is either a username or password. 
     Restrictions include: username must be between 4 and 20 chars, password no 
@@ -29,12 +33,14 @@ let validate_print validation i_type =
   let result = validate_input validation i_type in 
   match result with
   | false -> if i_type = Username then begin 
-      print_endline "Your username is invalid. Please be sure you adhere to the following: 
-  No spaces or special characters, and be sure the length is between 4 and 20 characters.";
+      print_endline "Your username is invalid. Please be sure you adhere to the following:";
+      print_endline 
+        "No spaces or special characters, and be sure the length is between 4 and 20 characters.";
       false end 
     else begin 
-      print_endline "Your password is invalid. Please be sure you adhere to the following: 
-  No spaces, no backslashes, and be sure that the length is greater than 8 characters."; 
+      print_endline "Your password is invalid. Please be sure you adhere to the following:"; 
+      print_endline 
+        "No spaces, no backslashes, and be sure that the length is greater than 8 characters."; 
       false end
   | true -> true
 
@@ -84,7 +90,7 @@ let rec password_verify user pass =
   print_endline "Please enter your password, or enter 0 to quit. \n";
   print_string  "> ";
   match read_line () with 
-  | exception End_of_file -> failwith "uhh"
+  | exception End_of_file -> failwith "failed"
   | input_pass -> 
     if input_pass = pass then 
       begin 
@@ -101,18 +107,19 @@ let rec password_verify user pass =
       password_verify user pass
     end
 
-(** [string_of_tasks user] takes in a user and prints out a formatted view 
-    for that user's tasks. *)
-let string_of_tasks (user : User.user) = 
-  let rec tasks_rec (tasks : Types.task list) = 
-    match tasks with 
-    | [] -> ()
-    | h :: t -> 
-      begin 
-        print_endline (h.title ^ ": " ^ h.status ^ " --> " ^
-                       h.description ^ " (id: " ^ string_of_int h.id ^")");
-        tasks_rec t 
-      end in tasks_rec user.tasks
+(** [tasks_rec tasks type_T] prints out a formatted view of tasks. If type_t is
+    View, then it includes the assignee name.  *)
+let rec tasks_print_rec (tasks : Types.task list) (type_t : task_output) = 
+  match tasks with 
+  | [] -> ()
+  | h :: t -> begin 
+      if type_t = View then 
+        print_string (h.assignee ^ " - " )
+      else print_string "";
+      print_endline (h.title ^ ": " ^ h.status ^ " --> " ^
+                     h.description ^ " (id: " ^ string_of_int h.id ^")");
+      tasks_print_rec t type_t
+    end 
 
 (** [team_lists_string team_l] takes in a list of teams and prints them 
     separated by commas. *)
@@ -123,14 +130,15 @@ let rec team_lists_string (team_l : Types.team list) =
                 (Types.Team.to_string_list h) ^  "\n" ^ (team_lists_string t)
 
 (** [team_select user] is a helper for [add_tasks_input] to display the teams
-    that a manager is a part of in order for the manager to determine which team 
-    they will be editing tasks for. *)
+    that a manager is a part of in order for the manager to determine which 
+    team they will be editing tasks for. *)
 let rec team_select (user : User.user) = 
   print_endline 
-    "Please enter the name of the team from the list below that you would like to edit.
-    The name is the first element of the list shown.\n";
+    "Please enter the name of the team from the list below that you would like to edit.";
+  print_endline "The name is the first element of the list shown.\n";
+  ANSITerminal.(print_string [green] "TEAMS: ");
   print_endline (team_lists_string user.teams);
-  print_string "\n> ";
+  print_string "> ";
   (* let team_name = User.get_team (read_line ()) in *)
   try User.get_team (read_line ()) with Database.NotFound team_name -> (
       print_endline 
@@ -145,7 +153,8 @@ let rec team_select (user : User.user) =
     and description inputted by the user. *)
 let print_input user = 
   let team = team_select user in
-  print_endline "Please enter the name of the user you would like to add a task to:\n";
+  print_endline 
+    "Please enter the name of the user you would like to add a task to:\n";
   print_string  "> ";
   let assignee = read_line () in 
   print_endline "Please enter the title of the task:\n";
@@ -176,7 +185,7 @@ let rec add_tasks_input user =
         match 
           User.manager_task_write assignee [title; status; description] 
             team user.tasks with 
-        | t_list -> print_endline "Success"
+        | t_list -> (print_endline "Success."; Stdlib.exit 0)
         | exception User.User_Not_In_Team assignee -> begin 
             print_endline 
               "This user was not in the team listed. Please reenter.";
@@ -198,22 +207,78 @@ let rec manager_add_option user =
             "Invalid input. Please enter either \"Task\" or \"Team\" ";
           manager_add_option user)
 
+(** [format_task task] formats the task into a readable format with obvious
+    fields. *)
+let format_task (task : Types.task) = 
+  print_endline 
+    ("Assignee: " ^ task.assignee ^ "\nTitle: " ^ task.title ^
+     "\nStatus: " ^ task.status ^ "\nDescription: " ^ task.description); ()
 
+(** [edit_field id tasks] takes in an id number and list of tasks and 
+    asks the user which field they would like to input from the task 
+    specified. *)
+let rec edit_field id tasks = 
+  print_endline "Which field would you like to edit? Enter from:";
+  print_endline "Assignee | Title | Status | Description\n";
+  let task = User.get_task_by_id tasks id in 
+  format_task task;
+  print_string "\n> ";
+  let rec entry id = 
+    match String.lowercase_ascii (read_line ()) with 
+    | "assignee" -> "assignee"
+    | "title" -> "title"
+    | "status" -> "status"
+    | "description" -> "description"
+    | _ -> (
+        print_endline "Invalid input. Please enter either:";
+        print_endline "Assignee | Title | Status | Description\n";
+        entry id)
+  in entry id
 
+(** [field_entry user] validates the id entry for the user, making sure it 
+    is an int. *)
+let rec id_entry user = 
+  let id = read_line () in 
+  if Str.string_match (Str.regexp "^[0-9]+$") id 0 
+  then int_of_string id else  
+    (print_endline "Please enter a valid id number. (Int input only)";
+     print_string "> ";
+     id_entry user)
+
+(** [manager_edit user] takes in a user with role manager and asks for input 
+    on where they would like to edit a task.  *)
+let rec manager_edit user = 
+  let team = team_select user in
+  print_endline 
+    "Please select the id number of the task you would like to edit.\n";
+  let tasks_list = User.get_team_tasks team in
+  tasks_print_rec (tasks_list) View;
+  print_string "> ";
+  let id = id_entry user in  
+  let field = edit_field id tasks_list in 
+  print_endline ("What would you like " ^ field ^ " to be updated to?");
+  let value = read_line () in 
+  match User.manager_task_edit id field value tasks_list with 
+  | t_list -> (print_endline "Success."; Stdlib.exit 0)
+  | exception User.Database_Fatal_Error "Database error" -> 
+    (print_endline "A problem occured in the database. Please retry";
+     manager_edit user)
 
 (** [manager_actions user] takes in a User.user that has the role of manager 
     and displays them the possible actions they can take. *)
 let rec manager_actions user = 
   print_endline 
     "What action would you like to do? Please enter one of the following:";
-  print_endline "Add | Delete | Edit \n";
+  print_endline "Add | Delete | Edit | Quit \n";
   match String.lowercase_ascii (read_line ()) with 
   | "add" -> manager_add_option user
   | "delete" -> () 
-  | "edit" -> ()
+  | "edit" -> manager_edit user
+  | "quit" -> Stdlib.exit 0
   | _ -> 
     (print_endline 
-       "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
+       "Invalid input. 
+       Please enter either \"Add\", \"Delete\", \"Edit\", or \"Quit\"\n"; 
      manager_actions user)
 
 (** Offer a user the actions that come with their role. If the user is a 
@@ -231,7 +296,7 @@ let rec actions (user : User.user) =
     actions. *)
 let get_tasks user = 
   let user_type = check_user user |> password_verify user in 
-  string_of_tasks user_type;
+  tasks_print_rec user_type.tasks Print_All;
   print_newline () ;
   actions user_type 
 

@@ -1,6 +1,7 @@
 open Field
 
 exception User_Not_In_Team of string
+exception Database_Fatal_Error of string
 
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
