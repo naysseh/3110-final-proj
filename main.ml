@@ -2,14 +2,11 @@ type input_type =
   | Password
   | Username
 
-(* if true, input is permitted - false, need to enter new input *)
-(* input is the given data, i_type is the type of data - user,pass,etc. *)
-
-(** Validates a given [input] based on its [i_type] which is either a username or 
-    password. Restrictions include: username must be between 4 and 20 chars,
-    password no smaller than 8 chars. 
-    Usernames cannot contain special characters, but passwords can 
-    (except backslash). *)
+(** [validate_input input i_type] validates a given [input] based on its 
+    [i_type] which is either a username or password. 
+    Restrictions include: username must be between 4 and 20 chars, password no 
+    smaller than 8 chars. Usernames cannot contain special characters, 
+    but passwords can (except backslash). *)
 let validate_input input i_type = 
   let new_input = String.trim input in 
   let length = String.length new_input in 
@@ -25,9 +22,9 @@ let validate_input input i_type =
 (* another regexp to exclude certain special chars: 
    "^[\\[\\$\\^\\.\\*\\+\\?]+$" *)
 
-(** validate_print takes in an input [validation] and then checks it as a 
-    valid input. If false, it matches it with its [i_type] (user or password).
-    It returns a bool t/f and prints a message. *)
+(** [validate_print validation i_type] takes in an input [validation] and then 
+    checks it as a valid input. If false, it matches it with its [i_type] 
+    (user or password). It returns a bool t/f and prints a message. *)
 let validate_print validation i_type = 
   let result = validate_input validation i_type in 
   match result with
@@ -41,9 +38,10 @@ let validate_print validation i_type =
       false end
   | true -> true
 
-(** Function to take in password for new account with name [user].
-    If a user enters a username that already exists, direct them to enter a new 
-    one w non-existing username. Create new user. *)
+(** [new_pass user] takes in password for new account with name [user].
+    Verifies their password using helper. If a user enters a username that 
+    already exists, direct them to enter a new one w non-existing username. 
+    Create new user. *)
 let rec new_pass user = 
   print_endline "Please enter a password for your new account \n";
   print_string  "> ";
@@ -55,7 +53,9 @@ let rec new_pass user =
     | pass -> print_endline "create new user not implemented" 
 (* print message to tell user to log in again using their new login *)
 
-let rec new_user x =
+(** [new_user username] validates an inputted username and presents the user
+    with the options on their input. *)
+let rec new_user username =
   print_endline "Please enter a username for your new account, no spaces or 
   special characters. \n";
   print_string  "> ";
@@ -71,15 +71,15 @@ let rec new_user x =
         print_endline "user already taken -- restart"; 
         new_user "not done"
 
-(** Takes in username [user], returns password if user exists. *)
+(** [check_user user] akes in username, returns password if user exists. *)
 let check_user user =
   try User.log_in user with  
     Database.NotFound user -> "Your username does not exist. Please enter again
     or create a new user."
 
-(** password_verify takes in a [user] and [pass] and verifies that the 
-    inputted password matches the username in the login base. Prompts the user 
-    to re-enter if the password does not match the username. *)
+(** [password_verify user pass] takes in a [user] and [pass] and verifies that 
+    the inputted password matches the username in the login base. Prompts the 
+    user to re-enter if the password does not match the username. *)
 let rec password_verify user pass =
   print_endline "Please enter your password, or enter 0 to quit. \n";
   print_string  "> ";
@@ -91,8 +91,6 @@ let rec password_verify user pass =
         print_string ("\n");
         ANSITerminal.(print_string [green] "TASKS: ");
         print_string ("\n"); 
-        (* if the user does not exist in the database, it will return 
-           an empty user. *)
         try User.create_session user with Database.NotFound user -> begin
             print_endline "User not in database/empty user.";
             {User.tasks=[]; User.teams=[]; User.role=Field.Engineer} end
@@ -103,10 +101,8 @@ let rec password_verify user pass =
       password_verify user pass
     end
 
-(* let pp_string_list = Fmt.list Fmt.string 
-
-   let string_list lst = Format.printf "%a" pp_string_list lst *)
-
+(** [string_of_tasks user] takes in a user and prints out a formatted view 
+    for that user's tasks. *)
 let string_of_tasks (user : User.user) = 
   let rec tasks_rec (tasks : Types.task list) = 
     match tasks with 
@@ -118,25 +114,36 @@ let string_of_tasks (user : User.user) =
         tasks_rec t 
       end in tasks_rec user.tasks
 
+(** [team_lists_string team_l] takes in a list of teams and prints them 
+    separated by commas. *)
 let rec team_lists_string (team_l : Types.team list) = 
   match team_l with 
   | [] -> ""
   | h :: t -> String.concat ", " 
                 (Types.Team.to_string_list h) ^  "\n" ^ (team_lists_string t)
 
-
+(** [team_select user] is a helper for [add_tasks_input] to display the teams
+    that a manager is a part of in order for the manager to determine which team 
+    they will be editing tasks for. *)
 let rec team_select (user : User.user) = 
   print_endline 
-    "Please enter the name of the team from the list below that you would like to edit.\n";
+    "Please enter the name of the team from the list below that you would like to edit.
+    The name is the first element of the list shown.\n";
   print_endline (team_lists_string user.teams);
   print_string "\n> ";
-  let team_name = User.get_team (read_line ()) in
-  try team_name with Database.NotFound team_name -> (
+  (* let team_name = User.get_team (read_line ()) in *)
+  try User.get_team (read_line ()) with Database.NotFound team_name -> (
       print_endline 
-        "Team name entered does not exist. Please enter a valid teamname.";
+        "Team name entered does not exist. Please enter a valid teamname.\n";
       team_select user)
 
-let rec add_tasks_input user = 
+(** *)
+
+(** [print_input user] is a helper for add_tasks_input that simply asks 
+    the user for input and prints out a string representation of the users 
+    desired input on tasks. Returns the team, assignee, title, status, 
+    and description inputted by the user. *)
+let print_input user = 
   let team = team_select user in
   print_endline "Please enter the name of the user you would like to add a task to:\n";
   print_string  "> ";
@@ -154,23 +161,34 @@ let rec add_tasks_input user =
    Enter 1 to confirm, or 0 to re-enter. \n";
   print_endline ("Team name: " ^ team.teamname ^ "\n");
   print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
-                 "Status: " ^ status ^ "\n" ^ "Description: " ^ description ^ "\n");
+                 "Status: " ^ status ^ "\n" ^
+                 "Description: " ^ description ^ "\n");
   print_string "> ";
+  (team, assignee, title, status, description)
+
+(** [add_tasks_input user] is the function that takes in input from the user
+    on the task they would like to add.  *)
+let rec add_tasks_input user = 
+  let (team, assignee, title, status, description) = print_input user in 
   let rec entry input = 
     match read_line () with 
     | "1" -> ( 
-        match User.manager_task_write assignee [title; status; description] team user.tasks with 
+        match 
+          User.manager_task_write assignee [title; status; description] 
+            team user.tasks with 
         | t_list -> print_endline "Success"
         | exception User.User_Not_In_Team assignee -> begin 
-            print_endline "This user was not in the team listed. Please reenter.";
-            add_tasks_input user end
-      )
+            print_endline 
+              "This user was not in the team listed. Please reenter.";
+            add_tasks_input user end )
     | "0" -> add_tasks_input user
     | _ -> (print_endline "Not a valid input. Please enter either 1 or 0.";
             entry user) 
   in entry user
 
-let rec add_option user = 
+(** [manager_add_option user] takes in a user that has the role of a manager 
+    and displays their options under the action "add." *) 
+let rec manager_add_option user = 
   print_endline "Please enter what you would like to add:";
   print_endline "Task | Team \n";
   match String.lowercase_ascii (read_line ()) with 
@@ -178,14 +196,19 @@ let rec add_option user =
   | "team" -> ()
   | _ -> (print_endline 
             "Invalid input. Please enter either \"Task\" or \"Team\" ";
-          add_option user)
+          manager_add_option user)
 
+
+
+
+(** [manager_actions user] takes in a User.user that has the role of manager 
+    and displays them the possible actions they can take. *)
 let rec manager_actions user = 
   print_endline 
     "What action would you like to do? Please enter one of the following:";
   print_endline "Add | Delete | Edit \n";
   match String.lowercase_ascii (read_line ()) with 
-  | "add" -> add_option user
+  | "add" -> manager_add_option user
   | "delete" -> () 
   | "edit" -> ()
   | _ -> 
@@ -193,7 +216,9 @@ let rec manager_actions user =
        "Invalid input. Please enter either \"Add\", \"Delete\", or \"Edit\""; 
      manager_actions user)
 
-(** Offer a user the actions that come with their role. *)
+(** Offer a user the actions that come with their role. If the user is a 
+    Engineer or Scrummer, they do not have access to alter tasks, only to
+    view them. *)
 let rec actions (user : User.user) = 
   let role = user.role in
   match role with 
@@ -201,22 +226,19 @@ let rec actions (user : User.user) =
   | Engineer -> ()
   | Scrummer -> ()
 
-
+(** [get_tasks user] takes in a string [user] and attempts to login. If 
+    successful, will print a user's list of tasks, and direct them to their 
+    actions. *)
 let get_tasks user = 
   let user_type = check_user user |> password_verify user in 
   string_of_tasks user_type;
   print_newline () ;
   actions user_type 
 
-(* let pp_cell fmt cell = Format.fprintf fmt "%s" cell *)
-
-(* create array matrix with tasks, make a row with titles
-   id, assignee, title, descr, status *)
-
 let main () =
   ANSITerminal.(print_string [magenta] 
 
-                  "─────────────────────────────────┬────────────────────────────────────────────────────────────────────────┬─────────────────────────────");
+                  "──────────────────────────────┬─────────────────────────────────────────────────────────────┬─────────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
