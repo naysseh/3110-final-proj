@@ -79,18 +79,13 @@ let rec new_user username =
         print_endline "user already taken -- restart"; 
         new_user "not done"
 
-(** [check_user user] akes in username, returns password if user exists. *)
-let check_user user =
-  try User.log_in user with  
-    Database.NotFound user -> "Your username does not exist. Please enter again
-    or create a new user."
-
 (** [password_verify user pass] takes in a [user] and [pass] and verifies that 
     the inputted password matches the username in the login base. Prompts the 
     user to re-enter if the password does not match the username. *)
 let rec password_verify user pass =
-  print_endline "Please enter your password, or enter 0 to quit. \n";
-  print_string  "> ";
+  print_newline ();
+  ANSITerminal.(print_string [blue] "Please enter your password, or enter 0 to quit.");
+  print_string "\n\n> ";
   match read_line () with 
   | exception End_of_file -> failwith "failed"
   | input_pass -> 
@@ -168,8 +163,13 @@ let print_input user =
   print_endline "Please enter the description of the task:\n";
   print_string  "> ";
   let description = read_line () in 
-  print_endline "Is this correct? Enter 1 to confirm, or 0 to re-enter. \n";
-  print_endline ("Team name: " ^ team.teamname ^ "\n");
+  print_newline ();
+  ANSITerminal.(print_string [magenta] ("Is this correct? Enter 1 to confirm, or 0 to re-enter. \n"));
+  print_newline ();
+  (* print_endline "Is this correct? Enter 1 to confirm, or 0 to re-enter. \n"; *)
+  (* print_endline ("Team name: " ^ team.teamname ^ "\n"); *)
+  ANSITerminal.(print_string [green] ("Team name: " ^ team.teamname));
+  print_newline ();
   print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
                  "Status: " ^ status ^ "\n" ^ "Description: " ^ description ^ "\n");
   print_string "> ";
@@ -200,8 +200,10 @@ let rec add_tasks_input user =
 (** [manager_add_option user] takes in a user that has the role of a manager 
     and displays their options under the action "add." *) 
 let rec manager_add_option user = 
+  print_newline ();
   print_endline "Please enter what you would like to add:";
-  print_endline "Task | Team \n";
+  ANSITerminal.(print_string [yellow] "Task | Team");
+  print_endline ("\n\n>:");
   match String.lowercase_ascii (read_line ()) with 
   | "task" -> add_tasks_input user 
   | "team" -> ()
@@ -339,14 +341,34 @@ let rec actions (user : User.user) =
         "As a scrummer, you do not have access to editing the saved information in the database. Goodbye!");
       Stdlib.exit 0 end 
 
+(** [check_user user] akes in username, returns password if user exists. *)
+let check_user user =
+  match User.log_in user with 
+  | password -> (true, password) 
+  | exception Database.NotFound _ -> (false, user)
+
+let rec start str = 
+  print_newline ();
+  ANSITerminal.(print_string [blue] "Please enter your username, or the word \"create\" to create a new user.\n");
+  print_string  "> ";
+  match read_line () with
+  | exception End_of_file -> ()
+  | "create" -> new_user "create"
+  | username -> get_tasks username
+
 (** [get_tasks user] takes in a string [user] and attempts to login. If 
     successful, will print a user's list of tasks, and direct them to their 
     actions. *)
-let get_tasks user = 
-  let user_type = check_user user |> password_verify user in 
-  tasks_print_rec user_type.tasks Print_All;
-  print_newline () ;
-  actions user_type 
+and get_tasks user = 
+  match check_user user with 
+  | (true, password) -> begin 
+      let user_type = password |> password_verify user in 
+      tasks_print_rec user_type.tasks Print_All;
+      actions user_type end 
+  | (false, _) -> 
+    (ANSITerminal.
+       (print_string [red] "Your username does not exist. Please enter again or create a new user.");
+     start user) 
 
 let main () =
   ANSITerminal.(print_string [magenta] 
@@ -359,11 +381,6 @@ let main () =
   ANSITerminal.(print_string [magenta] "                        |\n");
   ANSITerminal.(print_string [magenta]
                   "                              └─────────────────────────────────────────────────────────────┘\n" );
-  print_endline "Please enter your username, or the word \"create\" to create a new user.\n";
-  print_string  "> ";
-  match read_line () with
-  | exception End_of_file -> ()
-  | "create" -> new_user "create"
-  | username -> get_tasks username
+  start "file start"
 
 let () = main ()
