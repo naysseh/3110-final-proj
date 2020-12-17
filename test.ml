@@ -48,42 +48,6 @@ let login_test (name : string) (user: string) (err_exp : bool) expected_out =
 (********************************************************************
    End helper functions.
  ********************************************************************)
-let create_session_test name username expected_user = 
-  name >:: (fun _ -> 
-      assert_equal expected_user (User.create_session username))
-
-let backend_tests = 
-  [
-    login_test "existing user" "test" false "test12345";
-    login_test "nonexisting" "nope" true "lol";
-    login_test "natasha" "Natasha" false "passwordlol";
-    login_test "nonexisting user within a team" "Salazar" true "slytherin";
-    create_session_test "Natasha user" "Natasha"  
-      {User.tasks =
-         [{Types.id = 2; assignee = "Natasha"; 
-           title = "Sleep"; status = "Active";
-           description = 
-             "\"natasha is tired after 3110 and just wants to sleep\""}];
-       teams =
-         [{Types.teamname = "3110 heroes";
-           members =
-             [("Andrii", Field.Manager); ("Brady", Field.Manager);
-              ("Natasha", Field.Manager)]}];
-       role = Field.Manager};
-    create_session_test "Andrii two tasks" "Andrii"
-      {User.tasks =
-         [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
-           description = "\"yeet yote yeeten\""};
-          {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
-           status = "To do"; description = "\"New CIS college ey\""}];
-       teams =
-         [{Types.teamname = "3110 heroes";
-           members =
-             [("Andrii", Field.Manager); ("Brady", Field.Manager);
-              ("Natasha", Field.Manager)]}];
-       role = Field.Manager};
-  ]
-
 
 let database_tests =
   [
@@ -135,6 +99,97 @@ let database_tests =
     search_tasks_with_edit_test "make Andrii jump" "Jump" "Jump" "title" 1
       [{id = 1; assignee = "Andrii"; title = "Jump"; status = "Done";
         description = "\"yeet yote yeeten\""}];
+    search_tasks_with_edit_test "make Andrii yeet again" "Yeet" "Yeet" "title" 1
+      [{id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+  ]
+
+let create_session_test name username expected_user = 
+  name >:: (fun _ -> 
+      assert_equal expected_user (User.create_session username))
+
+let get_team_tasks_test name (team : Types.team) expected_tasks = 
+  name >:: (fun _ -> 
+      assert_equal expected_tasks (User.get_team_tasks team))
+
+let get_task_by_id_test name tasks id exp_task exc_exp = 
+  name >:: (fun _ -> 
+      if exc_exp then
+        assert_raises (Not_found) (fun () -> User.get_task_by_id tasks id)
+      else 
+        assert_equal exp_task (User.get_task_by_id tasks id))
+
+let get_team_test name team_name exp_team exc_exp = 
+  name >:: (fun _ -> 
+      if exc_exp then
+        assert_raises (NotFound team_name) (fun () -> User.get_team team_name)
+      else 
+        assert_equal exp_team (User.get_team team_name))
+
+let backend_tests = 
+  [
+    login_test "existing user" "test" false "test12345";
+    login_test "nonexisting" "nope" true "lol";
+    login_test "natasha" "Natasha" false "passwordlol";
+    login_test "nonexisting user within a team" "Salazar" true "slytherin";
+    create_session_test "Natasha user" "Natasha"  
+      {User.tasks =
+         [{Types.id = 2; assignee = "Natasha"; 
+           title = "Sleep"; status = "Active";
+           description = 
+             "\"natasha is tired after 3110 and just wants to sleep\""}];
+       teams =
+         [{Types.teamname = "3110 heroes";
+           members =
+             [("Andrii", Field.Manager); ("Brady", Field.Manager);
+              ("Natasha", Field.Manager)]}];
+       role = Field.Manager};
+    create_session_test "Andrii two tasks" "Andrii"
+      {User.tasks =
+         [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+           description = "\"yeet yote yeeten\""};
+          {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+           status = "To do"; description = "\"New CIS college ey\""}];
+       teams =
+         [{Types.teamname = "3110 heroes";
+           members =
+             [("Andrii", Field.Manager); ("Brady", Field.Manager);
+              ("Natasha", Field.Manager)]}];
+       role = Field.Manager};
+    get_team_tasks_test "3110 heroes" 
+      {Types.teamname = "3110 heroes"; 
+       members =
+         [("Andrii", Field.Manager); ("Brady", Field.Manager);
+          ("Natasha", Field.Manager)]} 
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""}];
+    get_task_by_id_test "task with id 3" 
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""}] 3 
+      {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+       description = "\"brady just wants to code\""} false;
+    get_task_by_id_test "error" [] 2 
+      {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+       description = "\"brady just wants to code\""} true;
+    get_team_test "non existent" "nah" 
+      {Types.teamname = "3110 heroes"; members = []} true;
+    get_team_test "Gryffindor people" "Gryffindor" 
+      {Types.teamname = "Gryffindor";  
+       members =
+         [("Potter", Field.Manager); ("Hermione", Field.Scrummer);
+          ("Ron", Field.Engineer); ("Ginny", Field.Engineer)]} false;
   ]
 
 module TaskCluster = MakeCluster.MakeCluster(Types.Task)(Cluster.NumIDSchema)
