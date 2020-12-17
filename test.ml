@@ -48,51 +48,93 @@ let login_test (name : string) (user: string) (err_exp : bool) expected_out =
 (********************************************************************
    End helper functions.
  ********************************************************************)
-
-let database_tests =
-  [
-    search_tasks_test "search for Andrii" "Andrii" 
-      [{id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
-        description = "\"yeet yote yeeten\""}];
-    search_tasks_test "search for o" "o" 
-      [{id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
-        description = "\"All the time\""};
-       {id = 3; assignee = "Brady"; title = "Code"; status = "To do";
-        description = "\"brady just wants to code\""};
-       {id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
-       {id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
-        description = "\"yeet yote yeeten\""}];
-    search_tasks_test "search for Nat" "Nat" 
-      [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
-    search_teams_test "search for potter" "Potter" 
-      [{team_name = "Gryffindor"; members = [" Potter, Hermione, Ron, Ginny"]}];
-    search_teams_test "teams search for o" "o" 
-      [{team_name = "3110 heroes"; members = ["Andrii, Brady, Natasha"]};
-       {team_name = "best profs ever"; members = ["Clarkson, White, Gries"]};
-       {team_name = "Gryffindor";
-        members = [" Potter, Hermione, Ron, Ginny"]};
-       {team_name = "Slytherin";
-        members = [" Voldemort, Blaze, Draco, Crabb, Goyle"]}];
-    search_tasks_with_add_test "adding task to sleep more" "sleep" 
-      ["Gries"; "Sleep"; "In development"; "\"just sleep\""]
-      [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
-       {id = 5; assignee = "Gries"; title = "Sleep"; status = "In development";
-        description = "\"just sleep\""}];
-    search_tasks_with_delete_test "deleting Gries task" "sleep" 5
-      [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
-    search_tasks_with_edit_test "make Andrii jump" "Jump" "Jump" "title" 1
-      [{id = 1; assignee = "Andrii"; title = "Jump"; status = "Done";
-        description = "\"yeet yote yeeten\""}];
-  ]
+let create_session_test name username expected_user = 
+  name >:: (fun _ -> 
+      assert_equal expected_user (User.create_session username))
 
 let backend_tests = 
   [
     login_test "existing user" "test" false "test12345";
     login_test "nonexisting" "nope" true "lol";
+    login_test "natasha" "Natasha" false "passwordlol";
+    login_test "nonexisting user within a team" "Salazar" true "slytherin";
+    create_session_test "Natasha user" "Natasha"  
+      {User.tasks =
+         [{Types.id = 2; assignee = "Natasha"; 
+           title = "Sleep"; status = "Active";
+           description = 
+             "\"natasha is tired after 3110 and just wants to sleep\""}];
+       teams =
+         [{Types.teamname = "3110 heroes";
+           members =
+             [("Andrii", Field.Manager); ("Brady", Field.Manager);
+              ("Natasha", Field.Manager)]}];
+       role = Field.Manager};
+    create_session_test "Andrii two tasks" "Andrii"
+      {User.tasks =
+         [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+           description = "\"yeet yote yeeten\""};
+          {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+           status = "To do"; description = "\"New CIS college ey\""}];
+       teams =
+         [{Types.teamname = "3110 heroes";
+           members =
+             [("Andrii", Field.Manager); ("Brady", Field.Manager);
+              ("Natasha", Field.Manager)]}];
+       role = Field.Manager};
+  ]
+
+
+let database_tests =
+  [
+    search_tasks_test "search for Andrii" "Andrii" 
+      [{Database.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    search_tasks_test "search for o" "o" 
+      [{Database.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Database.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+        description = "\"All the time\""};
+       {Database.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Database.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    search_tasks_test "search for Nat" "Nat" 
+      [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    search_teams_test "search for potter" "Potter" 
+      [{Database.team_name = "Gryffindor";
+        members = ["Manager Potter"; "Scrummer Hermione"; 
+                   "Engineer Ron"; "Engineer Ginny"]}];
+    search_teams_test "teams search for o" "o" 
+      [{team_name = "3110 heroes";
+        members = ["Manager Andrii"; "Manager Brady"; "Manager Natasha"]};
+       {team_name = "best profs ever";
+        members = ["Scrummer Clarkson"; "Engineer White"; "Manager Gries"]};
+       {team_name = "Gryffindor";
+        members =
+          ["Manager Potter"; "Scrummer Hermione"; 
+           "Engineer Ron"; "Engineer Ginny"]};
+       {team_name = "Slytherin";
+        members =
+          ["Manager Salazar"; "Manager Voldemort"; "Engineer Blaze"; "Scrummer Draco";
+           "Engineer Crabb"; "Engineer Goyle"]}];
+    search_tasks_with_add_test "adding task to sleep more" "sleep" 
+      ["Gries"; "Sleep"; "In development"; "\"just sleep\""]
+      [{Database.id = 6; assignee = "Gries"; title = "Sleep";
+        status = "In development"; description = "\"just sleep\""};
+       {Database.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    search_tasks_with_delete_test "deleting Gries task" "sleep" 6
+      [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    search_tasks_with_edit_test "make Andrii jump" "Jump" "Jump" "title" 1
+      [{id = 1; assignee = "Andrii"; title = "Jump"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
   ]
 
 module TaskCluster = MakeCluster.MakeCluster(Types.Task)(Cluster.NumIDSchema)
@@ -140,8 +182,8 @@ let cluster_task_tests =
 
 let suite =
   "test suite for MS1"  >::: List.flatten [
-    database_tests;
     backend_tests;
+    database_tests;
   ]
 
 let _ = run_test_tt_main suite
