@@ -35,14 +35,12 @@ let validate_print validation i_type =
   | false -> if i_type = Username then begin 
       ANSITerminal.(
         print_string [red] "Your username is invalid. Please be sure you adhere to the following:");
-      (* print_endline "Your username is invalid. Please be sure you adhere to the following:"; *)
       print_endline 
         "No spaces or special characters, and be sure the length is between 4 and 20 characters.";
       false end 
     else begin 
       ANSITerminal.(
         print_string [red] "Your password is invalid. Please be sure you adhere to the following:");
-      (* print_endline "Your password is invalid. Please be sure you adhere to the following:";  *)
       print_endline 
         "No spaces, no backslashes, and be sure that the length is greater than 8 characters."; 
       false end
@@ -108,9 +106,8 @@ let rec password_verify user pass =
     else if input_pass = "0" then Stdlib.exit 0
     else begin 
       ANSITerminal.(
-        print_string [red] "Your password does not match your inputted username. Please try again.\n");
-      (* print_endline 
-         "Your password does not match your inputted username. Please try again.\n"; *)
+        print_string [red] 
+          "Your password does not match your inputted username. Please try again.\n");
       password_verify user pass
     end
 
@@ -146,13 +143,10 @@ let rec team_select (user : User.user) =
   ANSITerminal.(print_string [green] "TEAMS: ");
   print_endline (team_lists_string user.teams);
   print_string "> ";
-  (* let team_name = User.get_team (read_line ()) in *)
   try User.get_team (read_line ()) with Database.NotFound team_name -> (
       ANSITerminal.(
         print_string [red] 
           "Team name entered does not exist. Please enter a valid teamname.\n");
-      (* print_endline 
-         "Team name entered does not exist. Please enter a valid teamname.\n"; *)
       team_select user)
 
 (** [print_input user] is a helper for add_tasks_input that simply asks 
@@ -174,12 +168,10 @@ let print_input user =
   print_endline "Please enter the description of the task:\n";
   print_string  "> ";
   let description = read_line () in 
-  print_endline "Please confirm that this is the task you would like to add. 
-   Enter 1 to confirm, or 0 to re-enter. \n";
+  print_endline "Is this correct? Enter 1 to confirm, or 0 to re-enter. \n";
   print_endline ("Team name: " ^ team.teamname ^ "\n");
   print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
-                 "Status: " ^ status ^ "\n" ^
-                 "Description: " ^ description ^ "\n");
+                 "Status: " ^ status ^ "\n" ^ "Description: " ^ description ^ "\n");
   print_string "> ";
   (team, assignee, title, status, description)
 
@@ -245,7 +237,6 @@ let rec edit_field id tasks =
     | _ -> (
         ANSITerminal.(print_string [red] "Invalid input. Please enter either:");
         ANSITerminal.(print_string [yellow] "Assignee | Title | Status | Description\n");
-        (* print_endline "Assignee | Title | Status | Description\n"; *)
         entry id)
   in entry id
 
@@ -278,7 +269,9 @@ let rec manager_edit user =
     (print_endline "A problem occured in the database. Please retry";
      manager_edit user)
 
-let rec manager_remove user = 
+(** [remove_helper user] is a helper for manager_remove that asks for and takes
+    in user inputs for the task they wish to delete. *) 
+let remove_helper user = 
   let team = team_select user in 
   print_endline 
     "Please select the id number of the task you would like to remove.\n";
@@ -291,6 +284,12 @@ let rec manager_remove user =
   print_string ("\n");
   print_endline "Please enter 1 to confirm or 0 to restart.";
   print_string("\n>");
+  (team, tasks_list, id)
+
+(** [manager_remove user] takes in a user with manager role and asks for input
+    on which task they would like to remove from the teams they are a part of.*)
+let rec manager_remove user = 
+  let (team, tasks_list, id) = remove_helper user in
   let rec entry user = 
     match read_line () with 
     | "1" -> (match User.manager_task_remove id tasks_list with 
@@ -305,8 +304,6 @@ let rec manager_remove user =
     | _ -> (print_endline "Not a valid input. Please enter either 1 or 0.";
             entry user) 
   in entry user
-(* print_endline "Are you sure you would like to remove " ^  ^  *)
-
 
 (** [manager_actions user] takes in a User.user that has the role of manager 
     and displays them the possible actions they can take. *)
@@ -320,12 +317,11 @@ let rec manager_actions user =
   | "delete" -> manager_remove user
   | "edit" -> manager_edit user
   | "quit" -> Stdlib.exit 0
-  | _ -> 
-    (  ANSITerminal.(
-           print_string [red] 
-             "Invalid input. Please enter either \"Add\", \"Delete\", \"Edit\", or \"Quit\"");
-       print_string ("\n");
-       manager_actions user)
+  | _ ->  (ANSITerminal.(
+      print_string [red] 
+        "Invalid input. Please enter either \"Add\", \"Delete\", \"Edit\", or \"Quit\"");
+     print_string ("\n");
+     manager_actions user)
 
 (** Offer a user the actions that come with their role. If the user is a 
     Engineer or Scrummer, they do not have access to alter tasks, only to
@@ -334,16 +330,14 @@ let rec actions (user : User.user) =
   let role = user.role in
   match role with 
   | Manager -> manager_actions user
-  | Engineer -> begin 
-      print_endline "As an engineer, you do not have access to editing
-  the saved information in the database. Goodbye!";
-      Stdlib.exit 0 
-    end 
-  | Scrummer -> begin 
-      print_endline "As a scrummer, you do not have access to 
-  editing the saved information in the database. Goodbye!";
-      Stdlib.exit 0 
-    end 
+  | Engineer -> begin ANSITerminal.(
+      print_string [magenta] 
+        "As an engineer, you do not have access to editing the saved information in the database. Goodbye!");
+      Stdlib.exit 0 end 
+  | Scrummer -> begin ANSITerminal.(
+      print_string [magenta] 
+        "As a scrummer, you do not have access to editing the saved information in the database. Goodbye!");
+      Stdlib.exit 0 end 
 
 (** [get_tasks user] takes in a string [user] and attempts to login. If 
     successful, will print a user's list of tasks, and direct them to their 
