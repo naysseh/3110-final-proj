@@ -78,7 +78,7 @@ let manager_task_write assignee task_data team tasks =
     let task_to_write = 
       assignee :: task_data in
     match Tasks.add task_to_write with
-    | Ok i -> append_task task_data tasks
+    | Ok i -> append_task task_to_write tasks
     | Error s -> raise (Database_Fatal_Error s)
   else raise (User_Not_In_Team assignee)
 
