@@ -40,4 +40,7 @@ val get_team_tasks : Types.team -> Types.task list
    Raises: Not_Found if no task with id id exists in the list.*)
 val get_task_by_id : Types.task list -> int -> Types.task
 
+(**[get_team teamname] returns the team type associated with the given 
+   teamname. 
+   Raises: Database.NotFound if the teamname does not exist. *)
 val get_team : string -> Types.team
