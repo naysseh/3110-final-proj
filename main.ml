@@ -6,6 +6,23 @@ type task_output =
   | View
   | Print_All
 
+type action =
+  | Add
+  | Edit
+  | Remove
+  | Display 
+
+(** [string_of_action action] returns a string representation of the action
+    type. *)
+let string_of_action action =
+  match action with 
+  | Add -> "add"
+  | Edit -> "edit"
+  | Remove -> "remove"
+  | Display -> "display"
+
+
+(******** Create User Verification Functions ********)
 (** [validate_input input i_type] validates a given [input] based on its 
     [i_type] which is either a username or password. 
     Restrictions include: username must be between 4 and 20 chars, password no 
@@ -77,32 +94,10 @@ let rec new_user username =
       | string -> 
         print_endline "user already taken -- restart"; 
         new_user "not done"
+(******** Create User Verification Functions ********)
 
-(** [password_verify user pass] takes in a [user] and [pass] and verifies that 
-    the inputted password matches the username in the login base. Prompts the 
-    user to re-enter if the password does not match the username. *)
-let rec password_verify user pass =
-  ANSITerminal.(print_string [blue] "\nPlease enter your password, or enter 0 to quit.");
-  print_string "\n\n> ";
-  match read_line () with 
-  | exception End_of_file -> failwith "failed"
-  | input_pass -> 
-    if input_pass = pass then 
-      begin 
-        ANSITerminal.(print_string [magenta] ("\nWelcome, " ^ user ^ "!\n"));
-        ANSITerminal.(print_string [green] "\nYOUR TASKS: \n");
-        try User.create_session user with Database.NotFound user -> begin
-            print_endline "User not in database/empty user.";
-            {User.tasks=[]; User.teams=[]; User.role=Field.Engineer} end
-      end 
-    else if input_pass = "0" then Stdlib.exit 0
-    else begin 
-      ANSITerminal.(
-        print_string [red] 
-          "Your password does not match your inputted username. Please try again.\n");
-      password_verify user pass
-    end
 
+(********Action Helpers********)
 (** [tasks_rec tasks type_T] prints out a formatted view of tasks. If type_t is
     View, then it includes the assignee name.  *)
 let rec tasks_print_rec (tasks : Types.task list) (type_t : task_output) = 
@@ -128,8 +123,9 @@ let rec team_lists_string (team_l : Types.team list) =
 (** [team_select user] is a helper for [add_tasks_input] to display the teams
     that a manager is a part of in order for the manager to determine which 
     team they will be editing tasks for. *)
-let rec team_select (user : User.user) = 
-  ANSITerminal.(print_string [blue] "\nPlease enter the name of the team from the list below that you would like to edit.");    
+let rec team_select (user : User.user) (action : action) = 
+  let action_string = string_of_action action in 
+  ANSITerminal.(print_string [blue] ("\nPlease enter the name of the team from the list below that you would like to " ^ action_string ^ "."));    
   ANSITerminal.(print_string [blue] "\nThe name is the first element of the list shown.\n");    
   ANSITerminal.(print_string [green] "TEAMS: \n");
   print_endline (team_lists_string user.teams);
@@ -138,14 +134,23 @@ let rec team_select (user : User.user) =
       ANSITerminal.(
         print_string [red] 
           "Team name entered does not exist. Please enter a valid teamname.\n");
-      team_select user)
+      team_select user action)
 
+(** [format_task task] formats the task into a readable format with obvious
+    fields. *)
+let format_task (task : Types.task) = 
+  print_endline 
+    ("Assignee: " ^ task.assignee ^ "\nTitle: " ^ task.title ^
+     "\nStatus: " ^ task.status ^ "\nDescription: " ^ task.description); ()
+(********Action Helpers********)
+
+(********Manager Add********)
 (** [print_input user] is a helper for add_tasks_input that simply asks 
     the user for input and prints out a string representation of the users 
     desired input on tasks. Returns the team, assignee, title, status, 
     and description inputted by the user. *)
 let print_input user = 
-  let team = team_select user in
+  let team = team_select user Add in
   print_endline 
     "Please enter the name of the user you would like to add a task to:\n";
   print_string  "> ";
@@ -204,14 +209,9 @@ let rec manager_add_option user =
       print_string [red] 
         "Invalid input. Please enter either \"Task\" or \"Team\"");
      manager_add_option user)
+(********Manager Add********)
 
-(** [format_task task] formats the task into a readable format with obvious
-    fields. *)
-let format_task (task : Types.task) = 
-  print_endline 
-    ("Assignee: " ^ task.assignee ^ "\nTitle: " ^ task.title ^
-     "\nStatus: " ^ task.status ^ "\nDescription: " ^ task.description); ()
-
+(********Manager Edit********)
 (** [edit_field id tasks] takes in an id number and list of tasks and 
     asks the user which field they would like to input from the task 
     specified. *)
@@ -246,9 +246,9 @@ let rec id_entry user =
 (** [manager_edit user] takes in a user with role manager and asks for input 
     on where they would like to edit a task.  *)
 let rec manager_edit user = 
-  let team = team_select user in
+  let team = team_select user Edit in
   ANSITerminal.(print_string [blue] "\nPlease select the id number of the task you would like to edit.\n");
-  let tasks_list = User.get_team_tasks team in
+  let tasks_list = User.get_team_tasks team  in
   tasks_print_rec (tasks_list) View;
   print_string "> ";
   let id = id_entry user in  
@@ -261,11 +261,13 @@ let rec manager_edit user =
   | exception User.Database_Fatal_Error "Database error" -> 
     (print_endline "A problem occured in the database. Please retry";
      manager_edit user)
+(********Manager Edit********)
 
+(********Manager Remove********)
 (** [remove_helper user] is a helper for manager_remove that asks for and takes
     in user inputs for the task they wish to delete. *) 
 let remove_helper user = 
-  let team = team_select user in 
+  let team = team_select user Remove in 
   print_endline 
     "Please select the id number of the task you would like to remove.\n";
   let tasks_list = User.get_team_tasks team in 
@@ -298,7 +300,30 @@ let rec manager_remove user =
         ANSITerminal.(print_string [red] "Not a valid input. Please enter either 1 or 0.");
         entry user) 
   in entry user
+(********Manager Remove********)
 
+(********Scrummer/Engineer Actions********)
+(** [show_team_tasks user] will display all the tasks for everyone in a team 
+    for the given user. *)
+let rec show_team_tasks user =
+  let team = team_select user Display in 
+  ANSITerminal.(print_string [green] "\nTEAM TASKS: \n");
+  tasks_print_rec (User.get_team_tasks team) View  
+
+(** [scrum_eng_actions user] asks the user with role Scrummer or Engineer if 
+    they would like to view tasks from all users on their teams. *)
+let rec scrum_eng_actions user role = 
+  ANSITerminal.(print_string [blue] ("\nAs a " ^ role ^ ", you can view the tasks on your team. What would you like to do?\n"));
+  ANSITerminal.(print_string [blue] "Press 1 to view your teams, or 0 to quit.\n");
+  print_string ("\n> ");
+  match read_line () with 
+  | "1" -> show_team_tasks user
+  | "0" -> Stdlib.exit 0
+  | _ ->  (ANSITerminal.(print_string [red] "Not a valid input. Please enter either 1 or 0.");
+           scrum_eng_actions user role)
+(********Scrummer/Engineer Actions********)
+
+(********Actions********)
 (** [manager_actions user] takes in a User.user that has the role of manager 
     and displays them the possible actions they can take. *)
 let rec manager_actions user = 
@@ -315,22 +340,6 @@ let rec manager_actions user =
         "Invalid input. Please enter either \"Add\", \"Delete\", \"Edit\", or \"Quit\"\n");
      manager_actions user)
 
-(** [show_team_tasks user] will display all the tasks for everyone in a team 
-    for the given user. *)
-let rec show_team_tasks user =
-  failwith "todo"
-
-(** [scrum_eng_actions user] asks the user with role Scrummer or Engineer if 
-    they would like to view tasks from all users on their teams. *)
-let rec scrum_eng_actions user role = 
-  ANSITerminal.(print_string [blue] ("\nAs a " ^ role ^ " you can view the tasks on your team. What would you like to do?\n"));
-  ANSITerminal.(print_string [blue] "Press 1 to display all tasks, or 0 to quit.\n");
-  match read_line () with 
-  | "1" -> show_team_tasks user
-  | "0" -> Stdlib.exit 0
-  | _ ->  (ANSITerminal.(print_string [red] "Not a valid input. Please enter either 1 or 0.");
-           scrum_eng_actions user role)
-
 (** [actions user] offers a user the actions that come with their role. *)
 let rec actions (user : User.user) = 
   let role = user.role in
@@ -338,6 +347,33 @@ let rec actions (user : User.user) =
   | Manager -> manager_actions user
   | Engineer -> scrum_eng_actions user "engineer"
   | Scrummer -> scrum_eng_actions user "scrummer"
+(********Actions********)
+
+(********Login Verification ********)
+(** [password_verify user pass] takes in a [user] and [pass] and verifies that 
+    the inputted password matches the username in the login base. Prompts the 
+    user to re-enter if the password does not match the username. *)
+let rec password_verify user pass =
+  ANSITerminal.(print_string [blue] "\nPlease enter your password, or enter 0 to quit.");
+  print_string "\n\n> ";
+  match read_line () with 
+  | exception End_of_file -> failwith "failed"
+  | input_pass -> 
+    if input_pass = pass then 
+      begin 
+        ANSITerminal.(print_string [magenta] ("\nWelcome, " ^ user ^ "!\n"));
+        ANSITerminal.(print_string [green] "\nYOUR TASKS: \n");
+        try User.create_session user with Database.NotFound user -> begin
+            print_endline "User not in database/empty user.";
+            {User.tasks=[]; User.teams=[]; User.role=Field.Engineer} end
+      end 
+    else if input_pass = "0" then Stdlib.exit 0
+    else begin 
+      ANSITerminal.(
+        print_string [red] 
+          "Your password does not match your inputted username. Please try again.\n");
+      password_verify user pass
+    end
 
 (** [check_user user] akes in username, returns password if user exists. *)
 let check_user user =
@@ -366,11 +402,12 @@ and get_tasks user =
     (ANSITerminal.
        (print_string [red] "Your username does not exist. Please enter again or create a new user.");
      start user) 
+(********Login Verification********)
 
 let main () =
   ANSITerminal.(print_string [magenta] 
 
-                  "──────────────────────────────┬─────────────────────────────────────────────────────────────┬────────────────────────────");
+                  "──────────────────────────────┬─────────────────────────────────────────────────────────────┬───────────────────────────");
   ANSITerminal.(print_string [magenta]
                   "\n                              |");
   ANSITerminal.(print_string [yellow] "                    Welcome to ");
