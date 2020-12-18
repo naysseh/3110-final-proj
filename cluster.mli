@@ -84,9 +84,6 @@ module type Cluster = sig
       criterion, if any. [ctxt] determines how the criterion is applied.
       Raises [Not_found] if nothing matches [criterion]. *)
   val search : select_context * (Field.t -> bool) -> Entry.t list
-  (* Searching in the file should not be case sensitive, and as an added
-     challenge, we can turn a blind eye to on incorrect character. This is
-     easiest to approach with regex. *)
 
   (** [delete (ctxt, criterion)] is [Ok x] if [x] entries meeting [criterion] 
       were deleted, and [Error e] if an exception described in [e] was raised
@@ -104,6 +101,16 @@ module type Cluster = sig
   (** [update change (ctxt * criterion)] edits the entry(s) matching [criterion]
       with [change]. [ctxt] determines how the criterion is applied.*)
   val update : Field.t -> select_context * (Field.t -> bool) -> bool
+
+  (** [query q] is the list of entries that qualify the query [q].
+      Only GET queries may cause this function to return a non-empty list. *)
+  val query : Query.t -> Entry.t list
+
+  (** [change q] is [Ok x] if [x] entries were modified by the database
+      operation, and [Error e] if an exception was thrown with 
+      error message [e]. 
+      GET queries will always be [Ok 0]. *)
+  val change : Query.t -> (int, string) result
 end
 
 (** [MakeCluster] is a functor that makes a [Cluster] out of

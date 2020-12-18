@@ -1,5 +1,5 @@
 # add modules as our codebase evolves
-MODULES=database field cluster types makeCluster user main
+MODULES=database field cluster types query makeCluster user main
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

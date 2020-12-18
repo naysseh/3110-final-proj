@@ -31,6 +31,8 @@ module type Cluster = sig
   val delete : select_context * (Field.t -> bool) -> (int, string) result
   val add : string list -> (int, string) result
   val update : Field.t -> select_context * (Field.t -> bool) -> bool
+  val query : Query.t -> Entry.t list
+  val change : Query.t -> (int, string) result
 end
 
 module type MakeCluster =

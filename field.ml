@@ -54,4 +54,4 @@ let make_str_field str (v : string) : t =
   | "Description" -> `Description v
   | "assignee" -> `User v
   | "Assignee" -> `User v
-  | _ -> failwith ""
+  | _ -> failwith "role does not exist"
