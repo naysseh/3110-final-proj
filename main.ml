@@ -186,27 +186,20 @@ and print_task_input user =
   ANSITerminal.(print_string [cyan] ("\nPlease enter the name of the user you would like to add a task to:\n"));
   print_string  "\n> ";
   let assignee = read_line () in 
-  ANSITerminal.(print_string [cyan] 
-                  ("\nPlease enter the title of the task:\n"));
+  ANSITerminal.(print_string [cyan]("\nPlease enter the task title:\n"));
   print_string  "\n> ";
   let title = read_line () in 
-  ANSITerminal.(print_string [cyan]
-                  ("\nPlease enter the status of the task:\n"));
+  ANSITerminal.(print_string [cyan] ("\nPlease enter the task status:\n"));
   print_string  "\n> ";
   let status = read_line () in 
-  ANSITerminal.(print_string [cyan]
-                  ("\nPlease enter the description of the task:\n"));
+  ANSITerminal.(print_string [cyan] ("\nPlease enter the task description:\n"));
   print_string  "\n> ";
   let description = read_line () in 
-  print_newline ();
-  ANSITerminal.(print_string [magenta] ("Is this correct? Enter 1 to confirm, or 0 to re-enter. \n"));
-  print_newline ();
+  ANSITerminal.(print_string [magenta] ("\nIs this correct? Enter 1 to confirm, or 0 to re-enter. \n\n"));
   ANSITerminal.(print_string [green] ("Team name: " ^ team.teamname));
-  print_newline ();
-  print_endline ("Assignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
-                 "Status: " ^ status ^ "\n" ^
-                 "Description: " ^ description ^ "\n");
-  print_string "> ";
+  print_string ("\nAssignee: " ^ assignee ^ "\n" ^ "Title: " ^ title ^ "\n" ^
+                "Status: " ^ status ^ "\n" ^
+                "Description: " ^ description ^ "\n\n> ");
   (team, assignee, title, status, description)
 
 (** [add_tasks_input user] is the function that takes in input from the user
@@ -217,15 +210,13 @@ and add_tasks_input user =
     match read_line () with 
     | "1" -> ( 
         match 
-          User.manager_task_write assignee
-            [title; status; ("\""^ description ^ "\"")] 
-            team user.tasks with 
+          User.manager_task_write assignee 
+            [title; status; ("\""^ description ^ "\"")] team user.tasks with 
         | t_list -> print_endline "Success. :]"; 
           actions {user with tasks = t_list}
         | exception User.User_Not_In_Team assignee -> begin 
             ANSITerminal.(
-              print_string [red] 
-                "\nThis user was not in the team listed. Please reenter.");
+              print_string [red] "\nThis user was not in the team listed. Please reenter.");
             add_tasks_input user end )
     | "0" -> add_tasks_input user
     | _ -> (ANSITerminal.(
@@ -256,8 +247,10 @@ and manager_add_options user =
     asks the user which field they would like to input from the task 
     specified. *)
 and edit_field id tasks = 
-  ANSITerminal.(print_string [cyan] "Which field would you like to edit? Enter from:\n");
-  ANSITerminal.(print_string [green] "Assignee | Title | Status | Description\n\n");
+  ANSITerminal.(print_string [cyan] 
+                  "Which field would you like to edit? Enter from:\n");
+  ANSITerminal.(print_string [green] 
+                  "Assignee | Title | Status | Description\n\n");
   let task = User.get_task_by_id tasks id in 
   format_task task;
   print_string "\n> ";
@@ -269,7 +262,8 @@ and edit_field id tasks =
     | "description" -> "description"
     | _ -> (
         ANSITerminal.(print_string [red] "Invalid input. Please enter either:");
-        ANSITerminal.(print_string [yellow] "Assignee | Title | Status | Description\n");
+        ANSITerminal.(print_string [yellow] 
+                        "Assignee | Title | Status | Description\n");
         entry id)
   in entry id
 

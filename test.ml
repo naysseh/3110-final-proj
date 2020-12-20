@@ -1,16 +1,16 @@
 (**TEST PLAN:
    1) All backend functions are tested via OUnit. Cluster is tested for Tasks, 
    Teams and Login Details. TDD was used throughtout the entire development, so
-   original sceleton database functions were also tested. Additionally, 
+   original skeleton database functions were also tested. Additionally, 
    everything else was tested manually via the REPL front-end, since all 
    functions are used in one way or the other to handle the operation of the 
    REPL.
    2) Modules tested by OUnit and how: 
     Cluster: tested using the Task functor. All operations used in the front-end
     were tested via blackbox testing based on signatures and expected outcomes.
-    User: Backend functions inside User module were tested by glass and black box 
-    testing. All OUnit tests were reviewed by all 3 of us ensuring coverage of 
-    all directly user functions, as well as those having an effect on data
+    User: Backend functions inside User module were tested by glass and black 
+    box testing. All OUnit tests were reviewed by all 3 of us ensuring coverage 
+    of all directly user functions, as well as those having an effect on data
     files. 
     Database: as the original sceleton functions for database operations these
     were tested by the entire team using Glass and Black Box. All tests 
@@ -86,17 +86,21 @@ let database_tests =
     search_tasks_test "search for o" "o" 
       [{Database.id = 5; assignee = "Andrii"; title = "Get into a new college";
         status = "To do"; description = "\"New CIS college ey\""};
-       {Database.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+       {Database.id = 4; 
+        assignee = "Clarkson"; title = "Lecture"; status = "To do";
         description = "\"All the time\""};
        {Database.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
-       {Database.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Database.id = 2; 
+        assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""};
        {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
         description = "\"yeet yote yeeten\""}];
     search_tasks_test "search for Nat" "Nat" 
       [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""}];
     search_teams_test "search for potter" "Potter" 
       [{Database.team_name = "Gryffindor";
         members = ["Manager Potter"; "Scrummer Hermione"; 
@@ -112,17 +116,21 @@ let database_tests =
            "Engineer Ron"; "Engineer Ginny"]};
        {team_name = "Slytherin";
         members =
-          ["Manager Salazar"; "Manager Voldemort"; "Engineer Blaze"; "Scrummer Draco";
+          ["Manager Salazar"; "Manager Voldemort"; 
+           "Engineer Blaze"; "Scrummer Draco";
            "Engineer Crabb"; "Engineer Goyle"]}];
     search_tasks_with_add_test "adding task to sleep more" "sleep" 
       ["Gries"; "Sleep"; "In development"; "\"just sleep\""]
       [{Database.id = 6; assignee = "Gries"; title = "Sleep";
         status = "In development"; description = "\"just sleep\""};
-       {Database.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+       {Database.id = 2; 
+        assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description =
+          "\"natasha is tired after 3110 and just wants to sleep\""}];
     search_tasks_with_delete_test "deleting Gries task" "sleep" 6
       [{id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""}];
     search_tasks_with_edit_test "make Andrii jump" "Jump" "Jump" "title" 1
       [{id = 1; assignee = "Andrii"; title = "Jump"; status = "Done";
         description = "\"yeet yote yeeten\""}];
@@ -212,7 +220,8 @@ let backend_tests =
       [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
         description = "\"yeet yote yeeten\""};
        {Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""};
        {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
        {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
@@ -221,7 +230,8 @@ let backend_tests =
       [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
         description = "\"yeet yote yeeten\""};
        {Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""};
        {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
        {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
@@ -318,21 +328,26 @@ let cluster_task_tests =
     cluster_search_tasks_test "Natasha task search" 
       (Sloppy, function | `User name -> name = "Natasha" | _ -> false)
       [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""}];
     cluster_search_tasks_test "tasks with description containing s" 
-      (Sloppy, function | `Description descr -> String.contains descr 's' | _ -> false)
+      (Sloppy, function | 
+          `Description descr -> String.contains descr 's' | _ -> false)
       [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""};
        {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""}];
     cluster_search_tasks_test "tasks with id 2" 
       (Sloppy, function | `ID id -> id = 2 | _ -> false)
       [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""}];
     cluster_search_tasks_test "tasks with negative id" 
       (Sloppy, function | `ID id -> id = -2 | _ -> false) [];
     cluster_search_tasks_test "Tasks with titles containing o"
-      (Sloppy, function | `Title title -> String.contains title 'o' | _ -> false)
+      (Sloppy, function | 
+          `Title title -> String.contains title 'o' | _ -> false)
       [{Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
        {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
@@ -343,7 +358,8 @@ let cluster_task_tests =
         description = "\"yeet yote yeeten\""};
        {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
-       {Types.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+       {Types.id = 4; 
+        assignee = "Clarkson"; title = "Lecture"; status = "To do";
         description = "\"All the time\""};
        {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
         status = "To do"; description = "\"New CIS college ey\""}];
@@ -364,23 +380,27 @@ let cluster_task_tests =
       (Sloppy, function | `User name -> name = "Natasha" | _ -> false)
       ["Natasha"; "Finish the final project"; "Done"; "YAAAAAY"]
       [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
-        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+        description = 
+          "\"natasha is tired after 3110 and just wants to sleep\""};
        {Types.id = 7; assignee = "Natasha"; title = "Finish the final project";
         status = "Done"; description = "YAAAAAY"}];
-    cluster_search_tasks_with_add_test "Add another task for status containing o" 
+    cluster_search_tasks_with_add_test 
+      "Add another task for status containing o" 
       (Sloppy, function | `Status sts -> String.contains sts 'o' | _ -> false)
       ["Brady"; "Finish school"; "Done"; "YAAAAAY"]
       [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
         description = "\"yeet yote yeeten\""};
        {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
         description = "\"brady just wants to code\""};
-       {Types.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+       {Types.id = 4; 
+        assignee = "Clarkson"; title = "Lecture"; status = "To do";
         description = "\"All the time\""};
        {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
         status = "To do"; description = "\"New CIS college ey\""};
        {Types.id = 7; assignee = "Natasha"; title = "Finish the final project";
         status = "Done"; description = "YAAAAAY"};
-       {Types.id = 8; assignee = "Brady"; title = "Finish school"; status = "Done";
+       {Types.id = 8; assignee = "Brady"; 
+        title = "Finish school"; status = "Done";
         description = "YAAAAAY"}];
     cluster_search_tasks_with_add_test "Add another task for Andrii" 
       (Sloppy, function | `User name -> name = "Andrii" | _ -> false)
