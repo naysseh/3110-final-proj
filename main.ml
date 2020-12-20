@@ -63,7 +63,8 @@ let rec new_pass user =
 (** [new_user username] validates an inputted username and presents the user
     with the options on their input. *)
 let rec new_user username =
-  ANSITerminal.(print_string [cyan] "\nPlease enter a username for the new account: no spaces or special characters.\n");
+  ANSITerminal.(print_string [cyan] 
+                  "\nPlease enter a username for the new account: no spaces or special characters.\n");
   print_string  "\n> ";
   let input = read_line () in 
   let validation = validate_print input User.Username in 
