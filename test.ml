@@ -8,9 +8,9 @@
    2) Modules tested by OUnit and how: 
     Cluster: tested using the Task functor. All operations used in the front-end
     were tested via blackbox testing based on signatures and expected outcomes.
-    User: Backend functions inside User module were tested by glass and black box 
-    testing. All OUnit tests were reviewed by all 3 of us ensuring coverage of 
-    all directly user functions, as well as those having an effect on data
+    User: Backend functions inside User module were tested by glass and black 
+    box  testing. All OUnit tests were reviewed by all 3 of us ensuring coverage
+    of all directly user functions, as well as those having an effect on data
     files. 
     Database: as the original sceleton functions for database operations these
     were tested by the entire team using Glass and Black Box. All tests 
