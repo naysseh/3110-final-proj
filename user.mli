@@ -10,6 +10,8 @@ exception Database_Fatal_Error of string
 (**Represents when a user already exists and can't be created therefore.*)
 exception User_Already_Exists of string
 
+(**Represents a given user with all the data associated with the 
+   current session.*)
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
 
