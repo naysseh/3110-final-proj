@@ -56,3 +56,11 @@ type input_type =
     smaller than 8 chars. Usernames cannot contain special characters, 
     but passwords can (except backslash). *)
 val validate_input : string -> input_type -> bool
+
+(**[add_user username password access team] adds the user with username username
+   with password password and role access to the team team. After updating all 
+   required files returns the team with the user added.
+   Requires: username and password are valid according to validation.
+   Raises: User_Already_Exists username if the user already exists.
+   Database_Fatal_error s with s indicating the error that happened.*)
+val add_user : string -> string -> string -> Types.team -> Types.team

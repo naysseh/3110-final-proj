@@ -22,6 +22,7 @@ type input_type =
 (********Exceptions********)
 exception User_Not_In_Team of string
 exception Database_Fatal_Error of string
+exception User_Already_Exists of string
 (********Exceptions********)
 
 (********General Helpers********)
@@ -140,3 +141,19 @@ let validate_input input i_type =
   else if i_type = Password && (String.contains new_input '\\') = true 
   then false 
   else true 
+
+let add_user username password access (team : Types.team) = 
+  let add_to_loginbase user password = 
+    match Teams.add (user :: password :: []) with
+    | Ok i -> 
+      {team with members = 
+                   (username, 
+                    Field.user_access_of_string access) :: team.members}
+    | Error s -> raise (Database_Fatal_Error s) in
+  match List.find (fun (user, _) -> username = user) team.members with
+  | user -> raise (User_Already_Exists username)
+  | exception (Not_found) -> 
+    if (Teams.update (`Member (username, Field.user_access_of_string access)) 
+          (Sloppy, function | `TeamName tn -> tn = team.teamname | _ -> false))
+    then add_to_loginbase username password 
+    else raise (Database_Fatal_Error username)
