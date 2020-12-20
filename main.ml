@@ -1,7 +1,3 @@
-type input_type = 
-  | Password
-  | Username
-
 type task_output = 
   | View
   | Print_All
@@ -22,19 +18,6 @@ let string_of_action action =
   | Display -> "display"
 
 (******** Create User Verification Functions ********)
-
-let validate_input input i_type = 
-  let new_input = String.trim input in 
-  let length = String.length new_input in 
-  if i_type = Username && (length < 4 || length > 20) then false 
-  else if i_type = Password && length < 8 then false 
-  else if String.contains new_input ' ' then false 
-  else if i_type = Username && 
-          (Str.string_match (Str.regexp "^[a-zA-Z0-9]+$") 
-             new_input 0) = false then false 
-  else if i_type = Password && (String.contains new_input '\\') = true 
-  then false 
-  else true 
 (* another regexp to exclude certain special chars: 
    "^[\\[\\$\\^\\.\\*\\+\\?]+$" *)
 
@@ -42,9 +25,9 @@ let validate_input input i_type =
     checks it as a valid input. If false, it matches it with its [i_type] 
     (user or password). It returns a bool t/f and prints a message. *)
 let validate_print validation i_type = 
-  let result = validate_input validation i_type in 
+  let result = User.validate_input validation i_type in 
   match result with
-  | false -> if i_type = Username then begin 
+  | false -> if i_type = User.Username then begin 
       ANSITerminal.(
         print_string [red] "\nYour username is invalid. Please be sure you adhere to the following:\n");
       print_endline 
@@ -66,7 +49,7 @@ let rec new_pass user =
   ANSITerminal.(print_string [cyan] "\nPlease enter a password for the new account\n");
   print_string  "\n> ";
   let input = read_line () in 
-  let validation = validate_print input Password in 
+  let validation = validate_print input User.Password in 
   if validation = false then new_pass user else 
     match input with 
     | exception End_of_file -> failwith "uh oh"
@@ -78,7 +61,7 @@ let rec new_user username =
   ANSITerminal.(print_string [cyan] "\nPlease enter a username for the new account: no spaces or special characters.\n");
   print_string  "\n> ";
   let input = read_line () in 
-  let validation = validate_print input Username in 
+  let validation = validate_print input User.Username in 
   if validation = false then new_user "restart" else 
     match input with 
     | exception End_of_file -> Stdlib.exit 0

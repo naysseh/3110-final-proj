@@ -8,38 +8,15 @@ module Teams = MakeCluster (Types.Team) (NoIDSchema)
 module Tasks = MakeCluster (Types.Task) (NumIDSchema)
 module LoginBase = MakeCluster (Types.Login) (NoIDSchema)
 
-(********RB Tree for Tasks********)
-type key = string
-type value = Types.task
-type color = 
-  | Red
-  | Black
-
-type t = 
-  | Leaf
-  | Node of (color * t * (key * value) * t)
-
-let empty = Leaf
-
-let is_empty = function
-  | Leaf -> true
-  | _ -> false
-
-let size d = 
-  let rec count_nodes_in_each d size = 
-    match d with
-    | Node (_, l, _, r) -> count_nodes_in_each l size + 1 
-                           + count_nodes_in_each r size
-    | Leaf -> size in
-  count_nodes_in_each d 0 
-
-
-
-(********RB Tree for Tasks********)
 
 (********Types********)
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
+
+type input_type = 
+  | Password
+  | Username
+
 (********Types********)
 
 (********Exceptions********)
@@ -150,3 +127,16 @@ let get_team teamname =
   | [] -> raise (Database.NotFound teamname)
   | h::[] -> h
   | _ -> failwith "More than one. Choose"
+
+let validate_input input i_type = 
+  let new_input = String.trim input in 
+  let length = String.length new_input in 
+  if i_type = Username && (length < 4 || length > 20) then false 
+  else if i_type = Password && length < 8 then false 
+  else if String.contains new_input ' ' then false 
+  else if i_type = Username && 
+          (Str.string_match (Str.regexp "^[a-zA-Z0-9]+$") 
+             new_input 0) = false then false 
+  else if i_type = Password && (String.contains new_input '\\') = true 
+  then false 
+  else true 

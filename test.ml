@@ -244,25 +244,25 @@ module TaskCluster = MakeCluster.MakeCluster(Types.Task)(Cluster.NumIDSchema)
 let checker (qfunc : Field.t) : bool = 
   if qfunc = `User "lol" then true else false
 
-let cluster_search_tasks_test (name : string) (criteria : string) 
+let cluster_search_tasks_test (name : string) criteria
     (expected_output) = 
   name >:: (fun _ -> 
       assert_equal (List.sort_uniq compare expected_output) (
-        List.sort_uniq compare (search_tasks criteria)))
+        List.sort_uniq compare (TaskCluster.search criteria)))
 
-let cluster_search_tasks_with_add_test (name : string) (criteria : string) 
+let cluster_search_tasks_with_add_test (name : string) criteria 
     (add : string list) (expected_output) = 
   name >:: (fun _ -> 
-      add_data_all "issues.txt" add true;
+      let _ = TaskCluster.add add in
       assert_equal (List.sort_uniq compare expected_output) (
-        List.sort_uniq compare (search_tasks criteria)))
+        List.sort_uniq compare (TaskCluster.search criteria)))
 
-let cluster_search_tasks_with_delete_test (name : string) (criteria : string) 
-    (add : int) (expected_output) = 
+let cluster_search_tasks_with_delete_test (name : string) criteria 
+    del_cond (expected_output) = 
   name >:: (fun _ -> 
-      delete_task add;
+      let _ = TaskCluster.delete del_cond in
       assert_equal (List.sort_uniq compare expected_output) (
-        List.sort_uniq compare (search_tasks criteria)))
+        List.sort_uniq compare (TaskCluster.search criteria)))
 
 let cluster_search_teams_test (name : string) (criteria : string)
     (expected_output) = 
@@ -270,22 +270,157 @@ let cluster_search_teams_test (name : string) (criteria : string)
       assert_equal (List.sort_uniq compare expected_output) (
         List.sort_uniq compare (search_teams criteria)))
 
-let cluster_search_tasks_with_edit_test (name : string) (criteria : string) change
+let cluster_search_tasks_with_edit_test (name : string) criteria change tasks
     field id (expected_output) = 
   name >:: (fun _ -> 
-      edit_task change field id;
+      let _ = User.manager_task_edit id field change tasks in
       assert_equal (List.sort_uniq compare expected_output) (
-        List.sort_uniq compare (search_tasks criteria)))
+        List.sort_uniq compare (TaskCluster.search criteria)))
+
+let string_contains s1 s2 =
+  try
+    let len = String.length s2 in
+    for i = 0 to String.length s1 - len do
+      if String.sub s1 i len = s2 then raise Exit
+    done;
+    false
+  with Exit -> true
 
 let cluster_task_tests = 
   [
+    cluster_search_tasks_test "Natasha task search" 
+      (Sloppy, function | `User name -> name = "Natasha" | _ -> false)
+      [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    cluster_search_tasks_test "tasks with description containing s" 
+      (Sloppy, function | `Description descr -> String.contains descr 's' | _ -> false)
+      [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""}];
+    cluster_search_tasks_test "tasks with id 2" 
+      (Sloppy, function | `ID id -> id = 2 | _ -> false)
+      [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""}];
+    cluster_search_tasks_test "tasks with negative id" 
+      (Sloppy, function | `ID id -> id = -2 | _ -> false) [];
+    cluster_search_tasks_test "Tasks with titles containing o"
+      (Sloppy, function | `Title title -> String.contains title 'o' | _ -> false)
+      [{Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""}];
+    cluster_search_tasks_test "Tasks with status containing o"
+      (Sloppy, function | `Status sts -> String.contains sts 'o' | _ -> false)
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Types.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+        description = "\"All the time\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""}];
+    cluster_search_tasks_test "Tasks where descriptions contain the word yeet"
+      (Sloppy, function 
+          | `Description dscr -> string_contains dscr "yeet" | _ -> false)
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    cluster_search_tasks_with_add_test "Add another yeet task"
+      (Sloppy, function 
+          | `Description dscr -> string_contains dscr "yeet" | _ -> false)
+      ["Clarkson"; "Grade exams"; "Active"; "yeet done"] 
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 6; assignee = "Clarkson"; title = "Grade exams";
+        status = "Active"; description = "yeet done"}];
+    cluster_search_tasks_with_add_test "Add another task for Natasha" 
+      (Sloppy, function | `User name -> name = "Natasha" | _ -> false)
+      ["Natasha"; "Finish the final project"; "Done"; "YAAAAAY"]
+      [{Types.id = 2; assignee = "Natasha"; title = "Sleep"; status = "Active";
+        description = "\"natasha is tired after 3110 and just wants to sleep\""};
+       {Types.id = 7; assignee = "Natasha"; title = "Finish the final project";
+        status = "Done"; description = "YAAAAAY"}];
+    cluster_search_tasks_with_add_test "Add another task for status containing o" 
+      (Sloppy, function | `Status sts -> String.contains sts 'o' | _ -> false)
+      ["Brady"; "Finish school"; "Done"; "YAAAAAY"]
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 3; assignee = "Brady"; title = "Code"; status = "To do";
+        description = "\"brady just wants to code\""};
+       {Types.id = 4; assignee = "Clarkson"; title = "Lecture"; status = "To do";
+        description = "\"All the time\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Types.id = 7; assignee = "Natasha"; title = "Finish the final project";
+        status = "Done"; description = "YAAAAAY"};
+       {Types.id = 8; assignee = "Brady"; title = "Finish school"; status = "Done";
+        description = "YAAAAAY"}];
+    cluster_search_tasks_with_add_test "Add another task for Andrii" 
+      (Sloppy, function | `User name -> name = "Andrii" | _ -> false)
+      ["Andrii"; "Finish CS3110"; "Almost"; "YAAAAAY"]
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Types.id = 9; assignee = "Andrii"; title = "Finish CS3110";
+        status = "Almost"; description = "YAAAAAY"}];
+    cluster_search_tasks_with_edit_test "Edit first task to Gries"
+      (Sloppy, function | `User name -> name = "Gries" | _ -> false)
+      "Gries" [] "Assignee" 1 
+      [{Types.id = 1; assignee = "Gries"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    cluster_search_tasks_with_edit_test "Edit first task back to Andrii" 
+      (Sloppy, function | `User name -> name = "Andrii" | _ -> false)
+      "Andrii" [] "assignee" 1 
+      [{Types.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""};
+       {Types.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Types.id = 9; assignee = "Andrii"; title = "Finish CS3110";
+        status = "Almost"; description = "YAAAAAY"}];
+    cluster_search_tasks_with_delete_test "Delete id 9"
+      (Sloppy, function | `ID id -> id = 9 | _ -> false)
+      (Sloppy, function | `ID id -> id = 9 | _ -> false) [];
+    cluster_search_tasks_with_delete_test "Delete id 8"
+      (Sloppy, function | `ID id -> id = 8 | _ -> false)
+      (Sloppy, function | `ID id -> id = 8 | _ -> false) [];
+    cluster_search_tasks_with_delete_test "Delete id 7"
+      (Sloppy, function | `ID id -> id = 7 | _ -> false)
+      (Sloppy, function | `ID id -> id = 7 | _ -> false) [];
+    cluster_search_tasks_with_delete_test "Delete id 6"
+      (Sloppy, function | `ID id -> id = 6 | _ -> false)
+      (Sloppy, function | `ID id -> id = 6 | _ -> false) [];
+  ]
 
+let validate_input_test name inp itype expected_out = 
+  name >:: (fun _ -> 
+      assert_equal expected_out (User.validate_input inp itype))
+
+let main_funcs_tests = 
+  [
+    validate_input_test "simple username" "Andrii" User.Username true;
+    validate_input_test "simple password" "12345678910" User.Password true;
+    validate_input_test "password too short" "123" User.Password false;
+    validate_input_test "username too short" "and" User.Username false;
+    validate_input_test "username too long" "NatashaNatashaNatashaNatashaNatash"
+      User.Username false;
+    validate_input_test "username has special chars" "Andrii+" User.Username 
+      false;
+    validate_input_test "password has backslash" "hi\\135262367" User.Password
+      false;
+    validate_input_test "valid username" "Natasha" User.Username true;
+    validate_input_test "valid password" "helloworld12345" User.Password true;
+    validate_input_test "valid password" "qwertyforever" User.Password true;
+    validate_input_test "valid username" "Brady" User.Username true;
+    validate_input_test "empty username" "" User.Username false;
   ]
 
 let suite =
   "test suite for MS1"  >::: List.flatten [
     backend_tests;
     database_tests;
+    cluster_task_tests;
+    main_funcs_tests;
   ]
 
 let _ = run_test_tt_main suite
