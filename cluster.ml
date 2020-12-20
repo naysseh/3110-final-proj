@@ -187,7 +187,7 @@ module NoIDSchema : Schema = struct
   let serialize data =
     String.concat ";" data
 
-  let rep_ok ?aux:(aux=fun x -> x) filename =
+  let rep_ok ?aux:(aux=Fun.id) filename =
     let ic = open_in filename in
     let rec parse () =
       try ignore (aux (input_line ic)); parse ()

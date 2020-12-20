@@ -15,7 +15,10 @@ end
     file architecture. *)
 module type Schema = sig
 
-  (** [deserialize line] is the deserialized version of [line]. *)
+  (** [deserialize line] is the deserialized version of [line]. A Schema
+      may have a unique way of denoting a new cell, for example a comma
+      or a semicolon, that this function removes.
+      [serialize (deserialize line) = line] *)
   val deserialize : string -> string list
 
   (** [serialize data] is the serialized version of [data]. *)
@@ -24,7 +27,9 @@ module type Schema = sig
   (** [rep_ok ?aux filename] is whether the file corresponding to [filename]
       adheres to the specified Schema. Since Schemas are used in conjunction
       with other modules, an [aux] function may be provided to check further
-      line-specific conditions. *)
+      line-specific conditions.
+      [aux line] is [line] if the line is valid, and raises [Failure] if
+      otherwise. If no function is provided, [aux line] is [id line]. *)
   val rep_ok : ?aux:(string -> string) -> string -> bool
 
   (** [search filename criteria] is the result of a search on [filename] with 
@@ -67,22 +72,27 @@ module type Cluster = sig
       important to database operations. *)
   module Sch : Schema
 
-  (** [filename] is the name of the plaintext file where data is stored. *)
+  (** [filename] is the name of the plaintext file where data is stored, and
+      the current domain of all functions. *)
   val filename : string ref
 
-  (** [bind teamname] focuses the cluster on the file for [teamname]. *)
+  (** [bind teamname] focuses the cluster on the file for [teamname]. If the
+      cluster is already bound, it is rebound. 
+      File-binding is a useful organizational technique that may or may not be
+      employed in the application. Different files may exist for a given
+      cluster, separated nominally by some unique id (in our case, we may
+      make use of team name to sort tasks.) *)
   val bind : string -> unit
 
   (** [unbind ()] unbinds the cluster from the current team-specific file. *)
   val unbind : unit -> unit
 
   (* [rep_ok ()] is whether the current bound file is a valid Cluster according
-     to the Sch and Entry implementation. *)
+     to the Sch and Entry implementations. *)
   val rep_ok : unit -> bool
 
   (** [search (ctxt, criterion)] is a list containing all entries that match the
-      criterion, if any. [ctxt] determines how the criterion is applied.
-      Raises [Not_found] if nothing matches [criterion]. *)
+      criterion, if any. [ctxt] determines how the criterion is applied. *)
   val search : select_context * (Field.t -> bool) -> Entry.t list
 
   (** [delete (ctxt, criterion)] is [Ok x] if [x] entries meeting [criterion] 
@@ -108,8 +118,8 @@ module type Cluster = sig
 
   (** [change q] is [Ok x] if [x] entries were modified by the database
       operation, and [Error e] if an exception was thrown with 
-      error message [e]. 
-      GET queries will always be [Ok 0]. *)
+      error message [e]. Primarily operates on query statements that cause
+      data modification; GET queries will always be [Ok 0]. *)
   val change : Query.t -> (int, string) result
 end
 

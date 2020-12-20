@@ -1,8 +1,12 @@
+(** A type of role corresponding both to a user's real-world responsibilities
+    and their privileges in the system. *)
 type user_access = 
   | Manager
   | Engineer
   | Scrummer
 
+(** A type t corresponds to a type of cell in the database. Each cluster may
+    have a unique schema with different enumerations. *)
 type t =
   [
     | `ID of int
