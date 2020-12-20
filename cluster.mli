@@ -90,8 +90,8 @@ module type Cluster = sig
   (** [unbind ()] unbinds the cluster from the current team-specific file. *)
   val unbind : unit -> unit
 
-  (* [rep_ok ()] is whether the current bound file is a valid Cluster according
-     to the Sch and Entry implementations. *)
+  (** [rep_ok ()] is whether the current bound file is a valid Cluster according
+      to the Sch and Entry implementations. *)
   val rep_ok : unit -> bool
 
   (** [search (ctxt, criterion)] is a list containing all entries that match the

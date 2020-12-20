@@ -51,6 +51,8 @@ val get_task_by_id : Types.task list -> int -> Types.task
    Raises: Database.NotFound if the teamname does not exist. *)
 val get_team : string -> Types.team
 
+(** [input_type] is the type representing either a username or password to be
+    used when validating strings. *)
 type input_type = 
   | Password
   | Username
