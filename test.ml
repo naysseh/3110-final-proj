@@ -1,3 +1,30 @@
+(**TEST PLAN:
+   1) All backend functions are tested via OUnit. Cluster is tested for Tasks, 
+   Teams and Login Details. TDD was used throughtout the entire development, so
+   original sceleton database functions were also tested. Additionally, 
+   everything else was tested manually via the REPL front-end, since all 
+   functions are used in one way or the other to handle the operation of the 
+   REPL.
+   2) Modules tested by OUnit and how: 
+    Cluster: tested using the Task functor. All operations used in the front-end
+    were tested via blackbox testing based on signatures and expected outcomes.
+    User: Backend functions inside User module were tested by glass and black box 
+    testing. All OUnit tests were reviewed by all 3 of us ensuring coverage of 
+    all directly user functions, as well as those having an effect on data
+    files. 
+    Database: as the original sceleton functions for database operations these
+    were tested by the entire team using Glass and Black Box. All tests 
+    reviewed by the 3 members of the team. 
+    Types, Field, MakeCluster: Tested via tests on Cluster since all those 
+    modules are used within it.
+   3) The testing approach demonstrates the correctness since all the functions 
+   that are called within the Main front-end are tested with all the corner 
+   cases, including exceptions and possible types of input data. Throughout the 
+   development all functions were tested that had an effect and were used, 
+   following the Requires and Raises rules in comments as well. 
+   Test-Driven Development and testing of most possible flows through the code 
+   ensured the correctness of the expected functionality.*)
+
 open OUnit2
 open Database
 
