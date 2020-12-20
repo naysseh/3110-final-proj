@@ -212,7 +212,8 @@ let rec add_tasks_input user =
     match read_line () with 
     | "1" -> ( 
         match 
-          User.manager_task_write assignee [title; status; description] 
+          User.manager_task_write assignee
+            [title; status; ("\""^ description ^ "\"")] 
             team user.tasks with 
         | t_list -> (print_endline "Success. :]"; Stdlib.exit 0)
         | exception User.User_Not_In_Team assignee -> begin 
