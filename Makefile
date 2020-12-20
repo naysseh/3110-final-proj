@@ -15,9 +15,18 @@ build:
 
 test:
 	cp issues.txt issues.init ;\
+	cp issues_test.txt issues.txt ;\
+	cp login_details.txt login_details.init ;\
+	cp login_details_test.txt login_details.txt ;\
+	cp teams.txt teams.init ;\
+	cp teams_test.txt teams.txt ;\
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential ;\
 	rm issues.txt ;\
-	mv issues.init issues.txt
+	rm login_details.txt ;\
+	rm teams.txt ;\
+	mv issues.init issues.txt ;\
+	mv login_details.init login_details.txt ;\
+	mv teams.init teams.txt
 
 start: 
 	$(OCAMLBUILD) $(MAIN) && ./$(MAIN)
