@@ -134,20 +134,18 @@ let man_task_write_test name username data team tasks expected_tasks
       assert_equal (expected_tasks, expected_search) 
         (x, y))
 
-let man_task_edit_test name id field value tasks expected_tasks 
+let man_task_edit_test name id field value user tasks expected_tasks 
     expected_search = 
   name >:: (fun _ -> 
       let x = User.manager_task_edit id field value tasks and
-      y = search_tasks value in
+      y = search_tasks user in
       assert_equal (expected_tasks, expected_search) 
         (x, y))
 
 let man_task_rem_test name id tasks crit expected_tasks expected_search = 
   name >:: (fun _ -> 
-      let x = User.manager_task_remove id tasks and
-      y = search_tasks crit in
-      assert_equal (expected_tasks, expected_search) 
-        (x, y))
+      let _ = User.manager_task_remove id tasks in
+      assert_raises (Database.NotFound crit) (fun () -> search_tasks crit))
 
 let backend_tests = 
   [
@@ -225,8 +223,8 @@ let backend_tests =
         status = "To do"; description = "\"New CIS college ey\""};
        {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
         description = "\"yeet yote yeeten\""}];
-    man_task_edit_test "Edit swim to fly" 6 "title" "Fly" 
-      [{Types.id = 6; assignee = "Andrii"; title = "Swim"; status = "Active";
+    man_task_edit_test "Edit swim to fly" 6 "title" "Fly" "Andrii"
+      [{Types.id = 6; assignee = "Andrii"; title = "Fly"; status = "Active";
         description = "\"Just Swim Bro\""}] 
       [{Types.id = 6; assignee = "Andrii"; title = "Fly"; status = "Active";
         description = "\"Just Swim Bro\""}]
