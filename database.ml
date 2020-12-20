@@ -25,7 +25,8 @@ let create_task string =
      status = status; 
      description =
        if List.length description = 1 && List.hd description = ""  then "" else
-         let temp_descr = List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
+         let temp_descr = 
+           List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
          String.sub temp_descr 1 ((String.length temp_descr) - 1)}
   | _ -> failwith "mistake with the reading" 
 
@@ -163,7 +164,8 @@ let edit_oper num_tasks closing inp out id change field=
     match input_line inp with
     | line -> begin
         if i != id then (output_string out line;)
-        else output_string out (new_line_task line change field); output_char out '\n';
+        else output_string out (new_line_task line change field); 
+        output_char out '\n';
         add_line (pred i)
       end
     | exception (End_of_file) -> 
@@ -197,8 +199,8 @@ let add_data filename data  =
   let total_tasks = total_tasks filename in
   let temp_file = filename ^ ".temp" in
   let ic = open_in filename and oc = open_out temp_file in 
-  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) in 
-  output_string oc (string_of_task new_task); 
+  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) 
+  in output_string oc (string_of_task new_task); 
   output_char oc '\n';
   let rec add_line i = 
     match input_line ic with

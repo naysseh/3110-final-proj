@@ -37,7 +37,8 @@ let user_in_team username (team : Types.team) =
   List.fold_left (fun b (name, _) -> b || (name = username)) false team.members
 
 let append_task data tasks = 
-  let id = (List.hd (List.rev (Tasks.search (Sloppy, function | _ -> true)))).id in
+  let id = 
+    (List.hd (List.rev (Tasks.search (Sloppy, function | _ -> true)))).id in
   let sorter (t1 : Types.task) (t2 : Types.task) = 
     if t1.id > t2.id then 1 else
     if t1.id = t2.id then 0 else -1 in
