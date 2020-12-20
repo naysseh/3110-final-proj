@@ -1,6 +1,11 @@
+(* [task_output] is a variant used to print tasks - if View, then include the 
+    assignee name when printing tasks. If PrintAll, then it is printed with no 
+    assignee name (as it will not be needed in the cases when used - PrintAll
+    is used when a user logs in to show their OWN tasks, so assignee name is 
+    unnecessary) *)
 type task_output = 
   | View
-  | Print_All
+  | PrintAll
 
 type action =
   | Add
@@ -69,7 +74,7 @@ let rec new_user username =
       match User.log_in user with
       | exception Database.NotFound user -> new_pass user
       | string -> 
-        print_endline "user already taken -- restart"; 
+        ANSITerminal.(print_string [red] "\nYour username was already taken. Please retry.\n");
         new_user "restart"
 (******** Create User Verification Functions ********)
 
@@ -119,23 +124,57 @@ let format_task (task : Types.task) =
   print_endline 
     ("Assignee: " ^ task.assignee ^ "\nTitle: " ^ task.title ^
      "\nStatus: " ^ task.status ^ "\nDescription: " ^ task.description); ()
+
+(** [role_entry user] is used when a manager creates a new user. Asks the
+    manager what role they would like to assign to their new created user. *)
+let rec role_entry user = 
+  ANSITerminal.(print_string [cyan] ("\nWhat role would you like to give this user? Enter from: \n"));
+  ANSITerminal.(print_string [green] ("Manager | Scrummer | Engineer\n"));
+  print_string "\n> ";
+  match String.lowercase_ascii (read_line ()) with 
+  | "manager" -> "Manager"
+  | "scrummer" -> "Scrummer"
+  | "engineer" -> "Engineer"
+  | _ -> (ANSITerminal.(print_string [red] "\nInvalid input. Please enter from: \n");
+          ANSITerminal.(print_string [green] ("Manager | Scrummer | Engineer\n"));
+          role_entry user)
+
+let print_confirm_add user pass (team : Types.team) role = 
+  ANSITerminal.(print_string [green] ("\nYou are adding: "));
+  print_string user;
+  ANSITerminal.(print_string [green] (" to team "));
+  print_string team.teamname;
+  ANSITerminal.(print_string [green] (" with password: "));
+  print_string pass;
+  ANSITerminal.(print_string [green] (" and role "));
+  print_string role;
+  ANSITerminal.(print_string [cyan] ("\nIs this correct? Enter 1 to confirm, or 0 to re-enter. \n"));
+  print_string ("\n> "); ()
 (********Action Helpers********)
 
 (********Manager Add********)
 (** [manager_add_user user] takes in a user with the role of manager and allows
     them to create a new member of their team, with a password to log in. *) 
-let manager_add_member user = 
+let rec manager_add_member user = 
   let team = team_select user Add in 
-  let (new_user, new_pass) = new_user "new" in 
-  ANSITerminal.(print_string [green] ("\nYou are adding: "));
-  print_string (new_user);
-  ANSITerminal.(print_string [green] (" to team "));
-  print_string (team.teamname);
-  ANSITerminal.(print_string [green] (" with password: "));
-  print_string (new_pass);
-  ANSITerminal.(print_string [cyan] ("\nIs this correct? Enter 1 to confirm, or 0 to re-enter. \n"));
-  print_string ("\n> ");
-  ()
+  let (new_user, new_pass) = new_user "new" in
+  let role = role_entry user in 
+  print_confirm_add new_user new_pass team role;
+  let rec entry user = 
+    match read_line () with 
+    | "1" -> begin match User.add_user new_user new_pass role team with
+        | team -> print_endline "Successfully added :)"
+        | exception User.User_Already_Exists str -> begin 
+            ANSITerminal.(print_string [red] "\nThis user already exists in the team. Please reenter.\n");
+            manager_add_member user end
+        | exception User.Database_Fatal_Error str -> begin 
+            ANSITerminal.(print_string [red] "\nAn error occurred in the database. Please reenter.\n");
+            manager_add_member user end  end 
+    | "0" -> manager_add_member user
+    | _ -> (ANSITerminal.(
+        print_string [red] 
+          "Not a valid input. Please enter either 1 or 0.");
+       entry user) in entry user 
 
 (** [print_input user] is a helper for add_tasks_input that simply asks 
     the user for input and prints out a string representation of the users 
@@ -315,7 +354,7 @@ let rec scrum_eng_actions user role =
            scrum_eng_actions user role)
 (********Scrummer/Engineer Actions********)
 
-(********Actions********)
+(********General Actions********)
 (** [manager_actions user] takes in a User.user that has the role of manager 
     and displays them the possible actions they can take. *)
 let rec manager_actions user = 
@@ -340,7 +379,7 @@ let rec actions (user : User.user) =
   | Manager -> manager_actions user
   | Engineer -> scrum_eng_actions user "engineer"
   | Scrummer -> scrum_eng_actions user "scrummer"
-(********Actions********)
+(********General Actions********)
 
 (********Login Verification ********)
 (** [password_verify user pass] takes in a [user] and [pass] and verifies that 
@@ -375,6 +414,7 @@ let check_user user =
   | password -> (true, password) 
   | exception Database.NotFound _ -> (false, user)
 
+(** [start str] begins the log-in sequence. *)
 let rec start str = 
   ANSITerminal.(print_string [cyan] ("\nPlease enter your username, or 0 to quit.\n"));
   print_string  "\n> ";
@@ -390,7 +430,7 @@ and get_tasks user =
   match check_user user with 
   | (true, password) -> begin 
       let user_type = password |> password_verify user in 
-      tasks_print_rec user_type.tasks Print_All;
+      tasks_print_rec user_type.tasks PrintAll;
       actions user_type end 
   | (false, _) -> 
     (ANSITerminal.
