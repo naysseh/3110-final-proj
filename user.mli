@@ -1,8 +1,13 @@
 (**All the backend functions needed for the Front-End.*)
 open Field
 
+(**Represents when the needed user is not in the given team.*)
 exception User_Not_In_Team of string
+
+(**Represents a fatal error in the database.*)
 exception Database_Fatal_Error of string
+
+(**Represents when a user already exists and can't be created therefore.*)
 exception User_Already_Exists of string
 
 type user = {tasks : Types.task list; teams : Types.team list; 

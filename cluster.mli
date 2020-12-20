@@ -4,11 +4,23 @@
 (** A module that matches [EntryType] is suitable for use as the type of entry
     in a [Cluster]. *)
 module type EntryType = sig
+  (**Type representing the data type.*)
   type t
+
+  (**File associated with that particular data type.*)
   val assoc_file : string
+
+  (**[create_entry str] is the entry made of str in type t.*)
   val create_entry : string list -> t
+
+  (**[update_field field value] is the updated value in field of value value.
+     Updates the assoc_file too.*)
   val update_field : Field.t -> t -> t
+
+  (**[to_string_list v] is the list formed from type t value v.*)
   val to_string_list : t -> string list
+
+  (**[to_field_list v] is the field list formed from type t value v.*)
   val to_field_list : t -> Field.t list
 end
 
