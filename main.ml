@@ -135,8 +135,7 @@ let rec role_entry user =
   | "manager" -> "Manager"
   | "scrummer" -> "Scrummer"
   | "engineer" -> "Engineer"
-  | _ -> (ANSITerminal.(print_string [red] "\nInvalid input. Please enter from: \n");
-          ANSITerminal.(print_string [green] ("Manager | Scrummer | Engineer\n"));
+  | _ -> (ANSITerminal.(print_string [red] "\nInvalid input. Please re-enter from the options.");
           role_entry user)
 
 let print_confirm_add user pass (team : Types.team) role = 
@@ -173,7 +172,8 @@ let rec manager_add_member user =
     | "0" -> manager_add_member user
     | _ -> (ANSITerminal.(
         print_string [red] 
-          "Not a valid input. Please enter either 1 or 0.");
+          "\nNot a valid input. Please enter either 1 or 0.");
+       print_string "\n> ";
        entry user) in entry user 
 
 (** [print_input user] is a helper for add_tasks_input that simply asks 
