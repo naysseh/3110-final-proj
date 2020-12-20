@@ -1,3 +1,6 @@
+(**Contains types and functions corresponding to possible fields within the 
+   program.*)
+
 (** A type of role corresponding both to a user's real-world responsibilities
     and their privileges in the system. *)
 type user_access = 

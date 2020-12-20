@@ -7,11 +7,15 @@ exception User_Already_Exists of string
 
 type user = {tasks : Types.task list; teams : Types.team list; 
              role : user_access}
+
 (**[log_in username] is a string that indicates the password that is expected 
    if the user exists. 
    Raises: NotFound if the user doesnt exist*)
 val log_in : string -> string
 
+(**[create_session username] is a user representing the session associated with 
+   a logged in user with username username.
+   Requires: username is an existing username*)
 val create_session : string -> user
 
 (**[manager_task_write username data team tasks] writes data into the file and 
@@ -65,3 +69,7 @@ val validate_input : string -> input_type -> bool
    Raises: User_Already_Exists username if the user already exists.
    Database_Fatal_error s with s indicating the error that happened.*)
 val add_user : string -> string -> string -> Types.team -> Types.team
+
+(**[update_teams old_team_list new_team] is the old_team_list with the old team
+   team update to new_team.*)
+val update_teams : Types.team list -> Types.team -> Types.team list

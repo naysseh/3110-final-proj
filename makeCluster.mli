@@ -1,4 +1,4 @@
-(** Database cluster storing tasks. *)
+(** Implements creation of a module for a Database cluster storing tasks. *)
 
 open Cluster
 

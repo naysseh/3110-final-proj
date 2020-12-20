@@ -157,3 +157,7 @@ let add_user username password access (team : Types.team) =
           (Sloppy, function | `TeamName tn -> tn = team.teamname | _ -> false))
     then add_to_loginbase username password 
     else raise (Database_Fatal_Error username)
+
+let update_teams tml (new_team : Types.team) = 
+  List.map (fun (team : Types.team) -> 
+      if team.teamname = new_team.teamname then new_team else team) tml

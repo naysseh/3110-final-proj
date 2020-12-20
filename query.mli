@@ -1,3 +1,5 @@
+(**Implementaion of basic queries.*)
+
 (** An acceptable query for the Cluster database. *)
 type t = 
     GET of from_clause * condition_clause

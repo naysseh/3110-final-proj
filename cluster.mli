@@ -1,3 +1,6 @@
+(**Implementation of Functors to create a module responsible for all data 
+   operations on the database.*)
+
 (** A module that matches [EntryType] is suitable for use as the type of entry
     in a [Cluster]. *)
 module type EntryType = sig
