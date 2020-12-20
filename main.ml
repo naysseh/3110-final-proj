@@ -215,7 +215,7 @@ let rec add_tasks_input user =
           User.manager_task_write assignee
             [title; status; ("\""^ description ^ "\"")] 
             team user.tasks with 
-        | t_list -> (print_endline "Success. :]"; Stdlib.exit 0)
+        | t_list -> (print_endline "Success. :]";)
         | exception User.User_Not_In_Team assignee -> begin 
             ANSITerminal.(
               print_string [red] 
@@ -249,7 +249,7 @@ let rec manager_add_options user =
     asks the user which field they would like to input from the task 
     specified. *)
 let rec edit_field id tasks = 
-  ANSITerminal.(print_string [cyan] "Which field would you like to edit? Enter from:");
+  ANSITerminal.(print_string [cyan] "Which field would you like to edit? Enter from:\n");
   ANSITerminal.(print_string [green] "Assignee | Title | Status | Description\n\n");
   let task = User.get_task_by_id tasks id in 
   format_task task;
@@ -273,8 +273,16 @@ let rec id_entry user =
   if Str.string_match (Str.regexp "^[0-9]+$") id 0 
   then int_of_string id else  
     (ANSITerminal.(print_string [red] "Please enter a valid id number. (Integer input only)");
-     print_string "> ";
+     print_string "\n\n> ";
      id_entry user)
+
+let rec task_with_id user task_list = 
+  let id = id_entry user in
+  match User.get_task_by_id task_list id with 
+  | task -> (task, id)
+  | exception Not_found -> (ANSITerminal.(print_string [red] "\nThis ID does not exist. Please enter a valid ID.");
+                            print_string "\n\n> ";
+                            task_with_id user task_list)
 
 (** [manager_edit user] takes in a user with role manager and asks for input 
     on where they would like to edit a task.  *)
@@ -284,19 +292,24 @@ let rec manager_edit user =
   let tasks_list = User.get_team_tasks team  in
   tasks_print_rec (tasks_list) View;
   print_string "> ";
-  let id = id_entry user in  
+  let (_, id) = task_with_id user tasks_list in
+  (* let id = id_entry user in   *)
   let field = edit_field id tasks_list in 
   ANSITerminal.(print_string [cyan] ("\nWhat would you like " ^ field ^ " to be updated to?\n"));
   print_string "\n> ";
   let value = read_line () in 
   match User.manager_task_edit id field value tasks_list with 
-  | t_list -> (print_endline "Success."; Stdlib.exit 0)
+  | t_list -> print_endline "Success."
+  | exception Not_found -> (
+      ANSITerminal.(print_string [red] "This ID does not exist in the team. Please restart.");
+      manager_edit user)
   | exception User.Database_Fatal_Error "Database error" -> 
     (print_endline "A problem occured in the database. Please retry";
      manager_edit user)
 (********Manager Edit********)
 
 (********Manager Remove********)
+
 (** [remove_helper user] is a helper for manager_remove that asks for and takes
     in user inputs for the task they wish to delete. *) 
 let remove_helper user = 
@@ -305,9 +318,9 @@ let remove_helper user =
   let tasks_list = User.get_team_tasks team in 
   tasks_print_rec (tasks_list) View;
   print_string "\n> ";
-  let id = id_entry user in 
+  let (task, id) = task_with_id user tasks_list in 
   ANSITerminal.(print_string [magenta] ("\nIs this the task you would like to delete?\n\n"));
-  format_task (User.get_task_by_id tasks_list id);
+  format_task task;
   print_string ("\n");
   ANSITerminal.(print_string [magenta] ("Please enter 1 to confirm or 0 to restart.\n"));
   print_string("\n> ");
@@ -320,9 +333,7 @@ let rec manager_remove user =
   let rec entry user = 
     match read_line () with 
     | "1" -> (match User.manager_task_remove id tasks_list with 
-        | t_list -> begin 
-            print_endline "Task successfully removed. :)";
-            Stdlib.exit 0 end 
+        | t_list -> print_endline "Task successfully removed. :)";
         | exception User.Database_Fatal_Error s -> begin 
             ANSITerminal.(print_string [red] "An error occured in the database. Please restart.");
             manager_remove user
@@ -371,15 +382,27 @@ let rec manager_actions user =
   | _ ->  (ANSITerminal.(
       print_string [red] 
         "Invalid input. Please enter either \"Add\", \"Delete\", \"Edit\", or \"Quit\"\n");
-     manager_actions user)
+     manager_actions user) 
 
 (** [actions user] offers a user the actions that come with their role. *)
 let rec actions (user : User.user) = 
-  let role = user.role in
-  match role with 
-  | Manager -> manager_actions user
-  | Engineer -> scrum_eng_actions user "engineer"
-  | Scrummer -> scrum_eng_actions user "scrummer"
+  let role = user.role in 
+  let access = 
+    match role with 
+    | Manager -> manager_actions user
+    | Engineer -> scrum_eng_actions user "engineer"
+    | Scrummer -> scrum_eng_actions user "scrummer" in 
+  access;
+  let rec new_action user = 
+    ANSITerminal.(print_string [cyan] "\nEnter 1 to choose another action, or 0 to quit.");
+    print_string "\n\n> ";
+    match read_line () with 
+    | "1" -> (actions user)
+    | "0" -> Stdlib.exit 0
+    | _ -> (ANSITerminal.(
+        print_string [red] "Invalid input. Please enter a 1 or 0.");
+       new_action user)
+  in new_action user
 (********General Actions********)
 
 (********Login Verification ********)
