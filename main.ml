@@ -276,13 +276,16 @@ let rec id_entry user =
      print_string "\n\n> ";
      id_entry user)
 
+(** [task_with_id user task_list] validates that the ID a user inputs is a 
+    valid entry of the task_list provided. *)
 let rec task_with_id user task_list = 
   let id = id_entry user in
   match User.get_task_by_id task_list id with 
   | task -> (task, id)
-  | exception Not_found -> (ANSITerminal.(print_string [red] "\nThis ID does not exist. Please enter a valid ID.");
-                            print_string "\n\n> ";
-                            task_with_id user task_list)
+  | exception Not_found -> 
+    ANSITerminal.(print_string [red] "\nThis ID does not exist. Please enter a valid ID.");
+    print_string "\n\n> ";
+    task_with_id user task_list
 
 (** [manager_edit user] takes in a user with role manager and asks for input 
     on where they would like to edit a task.  *)
@@ -293,7 +296,6 @@ let rec manager_edit user =
   tasks_print_rec (tasks_list) View;
   print_string "> ";
   let (_, id) = task_with_id user tasks_list in
-  (* let id = id_entry user in   *)
   let field = edit_field id tasks_list in 
   ANSITerminal.(print_string [cyan] ("\nWhat would you like " ^ field ^ " to be updated to?\n"));
   print_string "\n> ";
@@ -309,7 +311,6 @@ let rec manager_edit user =
 (********Manager Edit********)
 
 (********Manager Remove********)
-
 (** [remove_helper user] is a helper for manager_remove that asks for and takes
     in user inputs for the task they wish to delete. *) 
 let remove_helper user = 
@@ -333,11 +334,10 @@ let rec manager_remove user =
   let rec entry user = 
     match read_line () with 
     | "1" -> (match User.manager_task_remove id tasks_list with 
-        | t_list -> print_endline "Task successfully removed. :)";
-        | exception User.Database_Fatal_Error s -> begin 
-            ANSITerminal.(print_string [red] "An error occured in the database. Please restart.");
-            manager_remove user
-          end )
+        | t_list -> (print_endline "Task successfully removed. :)";)
+        | exception User.Database_Fatal_Error s ->  
+          ANSITerminal.(print_string [red] "An error occured in the database. Please restart.");
+          manager_remove user)
     | "0" -> manager_remove user
     | _ -> (
         ANSITerminal.(print_string [red] "Not a valid input. Please enter either 1 or 0.");
