@@ -22,11 +22,7 @@ let string_of_action action =
   | Display -> "display"
 
 (******** Create User Verification Functions ********)
-(** [validate_input input i_type] validates a given [input] based on its 
-    [i_type] which is either a username or password. 
-    Restrictions include: username must be between 4 and 20 chars, password no 
-    smaller than 8 chars. Usernames cannot contain special characters, 
-    but passwords can (except backslash). *)
+
 let validate_input input i_type = 
   let new_input = String.trim input in 
   let length = String.length new_input in 
@@ -211,7 +207,7 @@ let rec add_tasks_input user =
 
 (** [manager_add_option user] takes in a user that has the role of a manager 
     and displays their options under the action "add." *) 
-let rec manager_add_option user = 
+let rec manager_add_options user = 
   ANSITerminal.(print_string [cyan] ("\nAs a manager, you may add tasks or new members to your team.\n"));
   ANSITerminal.(print_string [cyan] ("Please enter what you would like to add:\n"));
   ANSITerminal.(print_string [green] "Task | Member");
@@ -222,7 +218,7 @@ let rec manager_add_option user =
   | _ -> (ANSITerminal.(
       print_string [red] 
         "\nInvalid input. Please enter either \"Task\" or \"Member\"");
-     manager_add_option user)
+     manager_add_options user)
 (********Manager Add********)
 
 (********Manager Edit********)
@@ -247,7 +243,7 @@ let rec edit_field id tasks =
         entry id)
   in entry id
 
-(** [field_entry user] validates the id entry for the user, making sure it 
+(** [id_entry user] validates the id entry for the user, making sure it 
     is an int. *)
 let rec id_entry user = 
   let id = read_line () in 
@@ -345,7 +341,7 @@ let rec manager_actions user =
   ANSITerminal.(print_string [green] "Add | Delete | Edit | Quit ");
   print_string("\n\n> ");
   match String.lowercase_ascii (read_line ()) with 
-  | "add" -> manager_add_option user
+  | "add" -> manager_add_options user
   | "delete" -> manager_remove user
   | "edit" -> manager_edit user
   | "quit" -> Stdlib.exit 0
