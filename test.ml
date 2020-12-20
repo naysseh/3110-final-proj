@@ -126,6 +126,29 @@ let get_team_test name team_name exp_team exc_exp =
       else 
         assert_equal exp_team (User.get_team team_name))
 
+let man_task_write_test name username data team tasks expected_tasks 
+    expected_search = 
+  name >:: (fun _ -> 
+      let x = User.manager_task_write username data team tasks and
+      y = search_tasks username in
+      assert_equal (expected_tasks, expected_search) 
+        (x, y))
+
+let man_task_edit_test name id field value tasks expected_tasks 
+    expected_search = 
+  name >:: (fun _ -> 
+      let x = User.manager_task_edit id field value tasks and
+      y = search_tasks value in
+      assert_equal (expected_tasks, expected_search) 
+        (x, y))
+
+let man_task_rem_test name id tasks crit expected_tasks expected_search = 
+  name >:: (fun _ -> 
+      let x = User.manager_task_remove id tasks and
+      y = search_tasks crit in
+      assert_equal (expected_tasks, expected_search) 
+        (x, y))
+
 let backend_tests = 
   [
     login_test "existing user" "test" false "test12345";
@@ -190,6 +213,32 @@ let backend_tests =
        members =
          [("Potter", Field.Manager); ("Hermione", Field.Scrummer);
           ("Ron", Field.Engineer); ("Ginny", Field.Engineer)]} false;
+    man_task_write_test "Andrii add task" "Andrii" 
+      ["Swim"; "Active"; "\"Just Swim Bro\""] 
+      {Types.teamname = "3110 heroes"; 
+       members =  [("Andrii", Field.Manager)]} [] 
+      [{Types.id = 6; assignee = "Andrii"; title = "Swim"; status = "Active";
+        description = "\"Just Swim Bro\""}] 
+      [{Database.id = 6; assignee = "Andrii"; title = "Swim"; status = "Active";
+        description = "\"Just Swim Bro\""};
+       {Database.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    man_task_edit_test "Edit swim to fly" 6 "title" "Fly" 
+      [{Types.id = 6; assignee = "Andrii"; title = "Swim"; status = "Active";
+        description = "\"Just Swim Bro\""}] 
+      [{Types.id = 6; assignee = "Andrii"; title = "Fly"; status = "Active";
+        description = "\"Just Swim Bro\""}]
+      [{Database.id = 6; assignee = "Andrii"; title = "Fly"; status = "Active";
+        description = "\"Just Swim Bro\""};
+       {Database.id = 5; assignee = "Andrii"; title = "Get into a new college";
+        status = "To do"; description = "\"New CIS college ey\""};
+       {Database.id = 1; assignee = "Andrii"; title = "Yeet"; status = "Done";
+        description = "\"yeet yote yeeten\""}];
+    man_task_rem_test "Delete the flying" 6 
+      [{Types.id = 6; assignee = "Andrii"; title = "Fly"; status = "Active";
+        description = "\"Just Swim Bro\""}] "Fly" [] [];
   ]
 
 module TaskCluster = MakeCluster.MakeCluster(Types.Task)(Cluster.NumIDSchema)

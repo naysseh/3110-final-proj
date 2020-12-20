@@ -60,8 +60,7 @@ let user_in_team username (team : Types.team) =
   List.fold_left (fun b (name, _) -> b || (name = username)) false team.members
 
 let append_task data tasks = 
-  let id = 1 + List.fold_left (fun max_id (task : Types.task) -> 
-      if task.id > max_id then task.id else max_id) 0 tasks in
+  let id = (List.hd (List.rev (Tasks.search (Sloppy, function | _ -> true)))).id in
   let sorter (t1 : Types.task) (t2 : Types.task) = 
     if t1.id > t2.id then 1 else
     if t1.id = t2.id then 0 else -1 in
@@ -72,7 +71,6 @@ let append_task data tasks =
     | _ -> failwith "" in
   List.sort sorter (task :: tasks)
 
-(**add change of tasks list*)
 let manager_task_write assignee task_data team tasks =
   if user_in_team assignee team then
     let task_to_write = 
