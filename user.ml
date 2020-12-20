@@ -144,7 +144,7 @@ let validate_input input i_type =
 
 let add_user username password access (team : Types.team) = 
   let add_to_loginbase user password = 
-    match Teams.add (user :: password :: []) with
+    match LoginBase.add (user :: password :: []) with
     | Ok i -> 
       {team with members = 
                    (username, 
