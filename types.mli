@@ -1,3 +1,5 @@
+(** Types we use throughout our program. *)
+
 open Cluster
 open Field
 

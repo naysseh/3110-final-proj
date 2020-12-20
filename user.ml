@@ -2,6 +2,7 @@
 open MakeCluster
 open Cluster
 open Field
+open Query
 
 module Teams = MakeCluster (Types.Team) (NoIDSchema)
 module Tasks = MakeCluster (Types.Task) (NumIDSchema)
@@ -49,9 +50,7 @@ exception Database_Fatal_Error of string
 (********General Helpers********)
 let get_team_tasks (team : Types.team) = 
   let team_members = List.map (fun (user, role) -> user) team.members in
-  Tasks.search (Sloppy, 
-                function | `User name -> List.mem name team_members
-                         | _ -> false)
+  Tasks.query (GET (FROM None, WHERE ("assignee" >>> team_members)))
 
 let get_task_by_id (tasks : Types.task list) id = 
   List.find (fun (task : Types.task) -> task.id = id) tasks

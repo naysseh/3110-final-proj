@@ -21,8 +21,10 @@ module Task : EntryType with type t = task = struct
       {id = int_of_string id; assignee = assignee; title = title; 
        status = status; 
        description =
-         if List.length description = 1 && List.hd description = ""  then "" else
-           let temp_descr = List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
+         if List.length description = 1 && List.hd description = ""  
+         then "" else
+           let temp_descr = 
+             List.fold_left (fun x y -> x ^ ";" ^ y) "" description in
            String.sub temp_descr 1 ((String.length temp_descr) - 1)}
     | _ -> failwith "mistake with creating a task"
 
@@ -39,7 +41,8 @@ module Task : EntryType with type t = task = struct
     [string_of_int t.id; t.assignee; t.title; t.status; t.description]
 
   let to_field_list t =
-    [`ID t.id; `User t.assignee; `Title t.title; `Status t.status; `Description t.description]
+    [`ID t.id; `User t.assignee; `Title t.title; `Status t.status; 
+     `Description t.description]
 end
 
 module Team : EntryType with type t = team = struct
@@ -63,7 +66,7 @@ module Team : EntryType with type t = team = struct
     match field with
     | `TeamName name -> {t with teamname=name}
     | `Member m -> {t with members = m :: t.members}
-    | _ -> t (* Field does not exist. To not update, or to raise an exception? *)
+    | _ -> t
 
   let to_string_list t = t.teamname :: List.map inv_make_user t.members
 
@@ -84,7 +87,7 @@ module Login : EntryType with type t = login = struct
     match field with
     | `User name -> {t with username=name}
     | `Password pass -> {t with password=pass}
-    | _ -> t (* Field does not exist. To not update, or to raise an exception? *)
+    | _ -> t
 
   let to_string_list t = [t.username; t.password]
 
