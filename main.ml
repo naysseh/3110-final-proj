@@ -75,16 +75,16 @@ let rec new_user username =
   print_string  "\n> ";
   let input = read_line () in 
   let validation = validate_print input User.Username in 
-  if validation = false then new_user "restart" else 
-    match input with 
-    | exception End_of_file -> Stdlib.exit 0
-    | user ->
-      match User.log_in user with
-      | exception Database.NotFound user -> new_pass user
-      | string -> 
-        ANSITerminal.(print_string [red] 
-                        "\nYour username was already taken. Please retry.\n");
-        new_user "restart"
+  match input, validation with 
+  | exception End_of_file -> Stdlib.exit 0
+  | _, false -> new_user "restart"
+  | user, true ->
+    match User.log_in user with
+    | exception Database.NotFound user -> new_pass user
+    | string -> 
+      ANSITerminal.(print_string [red] 
+                      "\nYour username was already taken. Please retry.\n");
+      new_user "restart"
 (******** Create User Verification Functions ********)
 
 
@@ -421,22 +421,10 @@ and manager_actions user =
 (** [actions user] offers a user the actions that come with their role. *)
 and actions (user : User.user) = 
   let role = user.role in 
-  let access = 
-    match role with 
-    | Manager -> manager_actions user
-    | Engineer -> scrum_eng_actions user "engineer"
-    | Scrummer -> scrum_eng_actions user "scrummer" in 
-  access;
-  let rec new_action user = 
-    ANSITerminal.(print_string [cyan] "\nEnter 1 to choose another action, or 0 to quit.");
-    print_string "\n\n> ";
-    match read_line () with 
-    | "1" -> actions user
-    | "0" -> Stdlib.exit 0
-    | _ -> (ANSITerminal.(
-        print_string [red] (invalid_msg ^ "enter a 1 or 0."));
-       new_action user)
-  in new_action user
+  match role with 
+  | Manager -> manager_actions user
+  | Engineer -> scrum_eng_actions user "engineer"
+  | Scrummer -> scrum_eng_actions user "scrummer" 
 (********General Actions********)
 
 (********Login Verification ********)
