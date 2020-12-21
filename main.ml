@@ -279,9 +279,10 @@ and edit_field id tasks =
     | "status" -> "status"
     | "description" -> "description"
     | _ -> (
-        ANSITerminal.(print_string [red] (invalid_msg ^ "enter either:"));
+        ANSITerminal.(print_string [red] (invalid_msg ^ "enter either:\n"));
         ANSITerminal.(print_string [yellow] 
                         "Assignee | Title | Status | Description\n");
+        print_string "\n> ";
         entry id)
   in entry id
 
@@ -391,7 +392,7 @@ and scrum_eng_actions user role =
                   "Press 1 to view your teams, or 0 to quit.\n");
   print_string ("\n> ");
   match read_line () with 
-  | "1" -> show_team_tasks user
+  | "1" -> (show_team_tasks user; actions user)
   | "0" -> Stdlib.exit 0
   | _ ->  (ANSITerminal.(print_string [red] 
                            (invalid_msg ^ "enter either 1 or 0."));

@@ -21,6 +21,10 @@ to either add a task, or add a new member to your team. Edit allows you to edit
 a specific field (assignee, title, status, description) of someone's task based 
 on ID in your team. Delete allows you to delete a task based on ID.
 
+**Please note!** Having one member on multiple teams is currently not supported, 
+and will cause the program to not behave as we wish it to, so do not add a 
+new member that already exists on another team onto the one you are editing.
+
 If you would like to test a user with the Scrummer role (as Engineer and 
 Scrummer have the same capabilities), log in using the user "Clarkson" and 
 password "password1234". Similar to the Manager role, you will see your own 
