@@ -6,8 +6,9 @@ program. This will check the types in the database file accordingly.
 When testing the functions in database.ml, use the created file "issues.txt" 
 as the file containing tasks.
 
-To test interactively, use the command "make" to launch utop. To use the current
-database functions, use Database.xxx - NOT ANYMORE
+To test interactively, use the command "make" to launch utop. 
+For the easiest access to database editing functions you can use User.xxx 
+functions, in particular manager_task_edit/write/remove.
 
 The new database structure is not connected to the application yet, but can be
 used interactively. Make a task cluster using MakeCluster.Make with Types.Task

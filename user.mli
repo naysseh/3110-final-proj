@@ -41,7 +41,12 @@ val manager_task_write : string -> string list -> Types.team ->
    indicates the error.*)
 val manager_task_remove : int -> Types.task list -> Types.task list
 
-(**[manager_task_edit id field value tasks] *)
+(**[manager_task_edit id field value tasks] is the task list with the task with 
+   ID id edited in field field to value value. The corresponding file is also 
+   altered.
+   Requires: Field is a valid field.
+   Raises: Database_Fatal_Error code if some database error has occured. code 
+   indicates the error.*)
 val manager_task_edit : int -> string -> string 
   -> Types.task list -> Types.task list
 
