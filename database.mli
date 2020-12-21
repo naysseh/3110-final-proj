@@ -1,4 +1,4 @@
-(**Base module for sceleton/starter functions taking care of database 
+(**Base module for skeleton/starter functions taking care of database 
    operations*)
 
 (**Represents the structure for a task. Contains all the details to do with a 

@@ -158,69 +158,6 @@ let mod_tasks
       end
   in process (total_tasks "issues.txt")
 
-(*
-let edit_oper num_tasks closing inp out id change field= 
-  let rec add_line i = 
-    match input_line inp with
-    | line -> begin
-        if i != id then (output_string out line;)
-        else output_string out (new_line_task line change field); 
-        output_char out '\n';
-        add_line (pred i)
-      end
-    | exception (End_of_file) -> 
-      closing in
-  add_line num_tasks
-
-let file_operation_generalization oper change field id=
-  let total_tasks = total_tasks in
-  let temp_file = "issues.txt.temp" in
-  let inp = open_in "issues.txt" and 
-    out = open_out temp_file in
-  (*custom code*)
-  let closing = 
-    begin 
-      flush out;
-      close_in inp;
-      close_out out;
-      Sys.remove "issues.txt";
-      Sys.rename temp_file "issues.txt" 
-    end in
-  oper total_tasks closing inp out
-
-let edit_task change field id = 
-  file_operation_generalization (edit_oper) change field id  *)
-
-(*
-let add_data filename data  = 
-  let new_data = list_to_string data in 
-  (* changed total task code here so it updates each time the 
-     function is called *)
-  let total_tasks = total_tasks filename in
-  let temp_file = filename ^ ".temp" in
-  let ic = open_in filename and oc = open_out temp_file in 
-  let new_task = create_task (string_of_int (total_tasks + 1) ^ ";" ^ new_data) 
-  in output_string oc (string_of_task new_task); 
-  output_char oc '\n';
-  let rec add_line i = 
-    match input_line ic with
-    | line -> 
-      begin
-        output_string oc line; 
-        if i != 1 then
-          output_char oc '\n'; 
-        add_line (pred i)
-      end 
-    | exception (End_of_file) ->
-      begin 
-        flush oc;
-        close_in ic;
-        close_out oc;
-        Sys.remove filename;
-        Sys.rename temp_file filename 
-      end in 
-  add_line total_tasks*)
-
 (*For all data types, use that*)
 let add_data_all filename data id_required = 
   let temp_file = filename ^ ".temp" in

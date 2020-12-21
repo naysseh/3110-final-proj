@@ -10,11 +10,6 @@ To test interactively, use the command "make" to launch utop.
 For the easiest access to database editing functions you can use User.xxx 
 functions, in particular manager_task_edit/write/remove.
 
-The new database structure is not connected to the application yet, but can be
-used interactively. Make a task cluster using MakeCluster.Make with Types.Task
-and Cluster.NumIDSchema, and you will make use of functions provided by
-the functor.
-
 In order to run the interactive UI, please run "make start". 
 
 A test user you may use is with the login "Natasha" and password "passwordlol".
@@ -30,7 +25,21 @@ If you would like to test a user with the Scrummer role (as Engineer and
 Scrummer have the same capabilities), log in using the user "Clarkson" and 
 password "password1234". Similar to the Manager role, you will see your own 
 tasks printed. Then you will be presented with the option to either see all the 
-tasks on your team, or to quit the application after viewing your own tasks. 
+tasks on your team, or to quit the application after viewing your own tasks.
+
+For an immersive experience with the Cluster database that the application
+runs on, make sure you have ran [make build], and then start up utop. 
+Once there, enter [#use "q.ml"], and three modules will be made for use in
+querying and modifying the database: [Tasks], [Teams], and [Users].
+You have access to two functions in each module, [query] and [change], both
+of which accept type [Query.t]. Thus, you can explore the database by forming
+query statements that obey both the structure of the [Query.t] type and
+standard OCaml syntax. Here are a couple examples you may use:
+[Users.query (GET (FROM None, WHERE ("user" === "Natasha")))]
+[Tasks.change (UPDATE 
+                (FROM None, 
+                REPLACE (`Status "On break"), 
+                WHERE ("assignee" >>> ["Brady"; "Natasha"; "Andrii"])))]
 
 To run the test suite run make test. The test suite uses the text files ending 
 with test, hence you can do anything you want with main data files as the tests

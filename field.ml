@@ -52,6 +52,5 @@ let make_str_field str (v : string) : t =
   | "Status" -> `Status v
   | "description" -> `Description v
   | "Description" -> `Description v
-  | "assignee" -> `User v
-  | "Assignee" -> `User v
+  | "assignee" | "Assignee" | "user" | "User" -> `User v
   | _ -> failwith "role does not exist"
