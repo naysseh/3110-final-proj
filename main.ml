@@ -22,7 +22,8 @@ let string_of_action action =
   | Remove -> "remove"
   | Display -> "display"
 
-let database_error_msg = "\nAn error occurred in the database. Please re-enter.\n"
+let database_error_msg = 
+  "\nAn error occurred in the database. Please re-enter.\n"
 let confirm_msg = "\nIs this correct? Enter 1 to confirm, or 0 to re-enter.\n"
 let invalid_msg = "\nInvalid input. Please "
 
