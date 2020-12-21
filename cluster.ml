@@ -131,13 +131,9 @@ module NumIDSchema : Schema = struct
       try let line = input_line ic in
         output_char oc '\n'; output_string oc line;
         add_line ()
-      with End_of_file -> () in
-    try add_line (); wrapup_ok ic oc temp_file filename; Ok 1
-    with Sys_error e -> wrapup_e ic oc temp_file; Error e
-
-  let rec to_one prev = function
-    | [] -> prev = 1
-    | h::t -> let x = get_id h in x = pred prev && to_one x t
+      with | End_of_file -> wrapup_ok ic oc temp_file filename; Ok 1
+           | Sys_error e -> wrapup_e ic oc temp_file; Error e
+    in add_line () 
 
   let delete filename selection =
     let length = total_lines filename in
@@ -149,22 +145,23 @@ module NumIDSchema : Schema = struct
       (* The top of selection will always be the one to delete next. *)
       try
         let line = input_line ic in
+        let delete curr rem =
+          if line <> curr then
+            begin
+              output_string oc (dec_id line amt);
+              output_char oc '\n';
+              process (pred i) (curr::rem) amt
+            end
+          else process (pred i) rem (pred amt) in
         match selection with
         | [] ->
           output_string oc line;
-          (if i <> 1 then output_char oc '\n');
+          output_char oc '\n';
           process (pred i) [] 0
-        | to_del::rem as s ->
-          if line <> to_del then
-            begin
-              output_string oc (dec_id line amt);
-              (if not (i = 1 || to_one i s) then output_char oc '\n');
-              process (pred i) s amt
-            end
-          else process (pred i) rem (pred amt)
-      with End_of_file -> () in
-    try process length selection num; wrapup_ok ic oc temp filename; Ok num
-    with Sys_error e -> wrapup_e ic oc temp; Error e
+        | curr::rem -> delete curr rem
+      with | End_of_file -> wrapup_ok ic oc temp filename; Ok num
+           | Sys_error e -> wrapup_e ic oc temp; Error e
+    in process length selection num
 
   let update filename change =
     let ic = open_in filename in
@@ -175,9 +172,9 @@ module NumIDSchema : Schema = struct
         output_string oc (change line);
         if i > 1 then output_char oc '\n';
         process (pred i)
-      with End_of_file -> () in
-    try process (total_lines filename); wrapup_ok ic oc temp filename; true
-    with Sys_error e -> wrapup_e ic oc temp; false
+      with | End_of_file -> wrapup_ok ic oc temp filename; true 
+           | Sys_error e -> wrapup_e ic oc temp; false
+    in process (total_lines filename)
 end
 
 module NoIDSchema : Schema = struct
@@ -191,8 +188,9 @@ module NoIDSchema : Schema = struct
     let ic = open_in filename in
     let rec parse () =
       try ignore (aux (input_line ic)); parse ()
-      with End_of_file -> close_in ic; true
-    in try parse () with Failure e -> false
+      with | End_of_file -> close_in ic; true
+           | Failure e -> false
+    in parse ()
 
   let search filename criterion = 
     let channel = open_in filename in
@@ -215,9 +213,9 @@ module NoIDSchema : Schema = struct
       try let line = input_line ic in
         output_char oc '\n'; output_string oc line;
         add_line ()
-      with End_of_file -> () in
-    try add_line (); wrapup_ok ic oc temp_file filename; Ok 1
-    with Sys_error e -> wrapup_e ic oc temp_file; Error e
+      with | End_of_file -> wrapup_ok ic oc temp_file filename; Ok 1 
+           | Sys_error e -> wrapup_e ic oc temp_file; Error e
+    in add_line () 
 
   let delete filename selection =
     let num = List.length selection in
@@ -227,22 +225,23 @@ module NoIDSchema : Schema = struct
     let rec process selection amt =
       try
         let line = input_line ic in
+        let delete curr rem =
+          if line <> curr then
+            begin
+              output_string oc line;
+              output_char oc '\n';
+              process (curr::rem) amt
+            end
+          else process rem (pred amt) in
         match selection with
         | [] ->
           output_string oc line;
           output_char oc '\n';
           process [] 0
-        | to_del::rem as s ->
-          if line <> to_del then
-            begin
-              output_string oc line;
-              output_char oc '\n';
-              process s amt
-            end
-          else process rem (pred amt)
-      with End_of_file -> () in
-    try process selection num; wrapup_ok ic oc temp filename; Ok num
-    with Sys_error e -> wrapup_e ic oc temp; Error e
+        | curr::rem -> delete curr rem
+      with | End_of_file -> wrapup_ok ic oc temp filename; Ok num
+           | Sys_error e -> wrapup_e ic oc temp; Error e
+    in process selection num
 
   let update filename change =
     let ic = open_in filename in
@@ -253,7 +252,7 @@ module NoIDSchema : Schema = struct
         output_string oc (change line);
         output_char oc '\n';
         process ()
-      with End_of_file -> () in
-    try process (); wrapup_ok ic oc temp filename; true
-    with Sys_error e -> wrapup_e ic oc temp; false
+      with | End_of_file -> wrapup_ok ic oc temp filename; true 
+           | Sys_error e -> wrapup_e ic oc temp; false
+    in process () 
 end
