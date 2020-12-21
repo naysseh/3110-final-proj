@@ -7,7 +7,7 @@ When testing the functions in database.ml, use the created file "issues.txt"
 as the file containing tasks.
 
 To test interactively, use the command "make" to launch utop. To use the current
-database functions, use Database.xxx
+database functions, use Database.xxx - NOT ANYMORE
 
 The new database structure is not connected to the application yet, but can be
 used interactively. Make a task cluster using MakeCluster.Make with Types.Task
@@ -31,4 +31,6 @@ password "password1234". Similar to the Manager role, you will see your own
 tasks printed. Then you will be presented with the option to either see all the 
 tasks on your team, or to quit the application after viewing your own tasks. 
 
-To run the test suite run make test.
+To run the test suite run make test. The test suite uses the text files ending 
+with test, hence you can do anything you want with main data files as the tests
+won't be affected by them.
